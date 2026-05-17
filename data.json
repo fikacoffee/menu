@@ -773,9 +773,9 @@
   ],
   "_Config": {
     "dailySuggestion": {
-      "drinkName": "Latte",
-      "foodName": "Ada LOVE",
-      "discountPercent": 15
+      "drinkName": "Ice Americano",
+      "foodName": "Siyah Çay",
+      "discountAmount": 145
     },
     "slotConfig": [
       {
