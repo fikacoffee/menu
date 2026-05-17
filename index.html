@@ -146,12 +146,7 @@
 
         const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800";
         // MenuData is now fetched from data.json.
-        const Jetonlar = [
-            { id: 'sicak', label: 'Sıcak', icon: 'coffee', class: 'coin-bronze' },
-            { id: 'soguk', label: 'Soğuk', icon: 'snowflake', class: 'coin-silver' },
-            { id: 'tatli', label: 'Tatlı', icon: 'cake-slice', class: 'coin-rose' },
-            { id: 'all', label: 'Sürpriz', icon: 'dices', class: 'coin-gold' }
-        ];
+        // Jetonlar are now dynamically loaded from menuData._Config.slotConfig
 
         const containerVariants = {
             hidden: { opacity: 0 },
@@ -211,7 +206,13 @@
                 return Object.entries(menuData)
                     .filter(([key]) => key !== 'Extralar' && key !== '_Config')
                     .map(([_, items]) => items)
-                    .flat();
+                    .flat()
+                    .filter(item => item.isActive !== false);
+            }, [menuData]);
+
+            const Jetonlar = useMemo(() => {
+                if (!menuData || !menuData._Config || !menuData._Config.slotConfig) return [];
+                return menuData._Config.slotConfig;
             }, [menuData]);
 
             const dailySuggestion = useMemo(() => {
@@ -224,8 +225,8 @@
                 Object.values(menuData).forEach(catItems => {
                     if (Array.isArray(catItems)) {
                         catItems.forEach(item => {
-                            if (item.name === config.drinkName) drink = item;
-                            if (item.name === config.foodName) food = item;
+                            if (item.name === config.drinkName && item.isActive !== false) drink = item;
+                            if (item.name === config.foodName && item.isActive !== false) food = item;
                         });
                     }
                 });
@@ -274,11 +275,20 @@
             const insertToken = (catId) => {
                 SoundEngine.playCoin(); // Jeton sesi
 
+                const tokenConfig = Jetonlar.find(j => j.id === catId);
                 let itemsList = [];
-                if (catId === 'sicak') itemsList = [...(menuData["Sıcak Kahveler"]||[]), ...(menuData["Bitki Çayları"]||[])];
-                else if (catId === 'soguk') itemsList = [...(menuData["Soğuk Kahveler"]||[]), ...(menuData["Soğuk Special"]||[])];
-                else if (catId === 'tatli') itemsList = menuData["Pastalar"]||[];
-                else itemsList = allItems; 
+                
+                if (tokenConfig && tokenConfig.targetCategories && tokenConfig.targetCategories.length > 0) {
+                    tokenConfig.targetCategories.forEach(cat => {
+                        if (menuData[cat]) {
+                            itemsList = [...itemsList, ...menuData[cat].filter(item => item.isActive !== false)];
+                        }
+                    });
+                } else {
+                    itemsList = allItems;
+                }
+                
+                if (itemsList.length === 0) itemsList = allItems; 
 
                 const winner = itemsList[Math.floor(Math.random() * itemsList.length)];
                 setWinningItem(winner);
@@ -413,7 +423,7 @@
 
                         {/* MENU GRID */}
                         <motion.main key={activeTab} variants={containerVariants} initial="hidden" animate="visible" className="container mx-auto max-w-2xl px-4 py-8">
-                            {(menuData[activeTab] || []).map((item, idx) => (
+                            {(menuData[activeTab] || []).filter(item => item.isActive !== false).map((item, idx) => (
                                 <motion.div key={item.name} variants={itemVariants} whileTap={{ scale: 0.96 }} onClick={() => { SoundEngine.playClick(); setSelectedItem(item); }} className="item-card group flex items-center p-3 mb-4 rounded-3xl cursor-pointer hover:border-white/50 transition-all duration-300 shadow-sm hover:shadow-md">
                                     <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden shadow-lg shrink-0 bg-white/20 relative">
                                         <img src={item.img} onError={handleImageError} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" alt={item.name} />

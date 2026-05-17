@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fika Coffee - Admin Panel</title>
+    <title>Fika Admin V2</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,429 +16,720 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { primary: '#E86A33' }
+                    colors: { primary: '#E86A33', primaryDark: '#C55527' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #f3f4f6; }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #E86A33; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #E86A33; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #E86A33; }
+        .toggle-checkbox { right: 0; z-index: 1; border-color: #e5e7eb; transition: all 0.3s; }
+        .toggle-label { width: 3rem; height: 1.5rem; background-color: #e5e7eb; border-radius: 9999px; transition: all 0.3s; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 pb-20 md:pb-0 md:pl-64">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
-        // Base64 encoding/decoding helper supporting UTF-8
-        const utf8_to_b64 = (str) => window.btoa(unescape(encodeURIComponent(str)));
-        const b64_to_utf8 = (str) => decodeURIComponent(escape(window.atob(str)));
+        // --- GITHUB API HELPERS ---
+        const getGithubCredentials = () => {
+            return {
+                username: localStorage.getItem('github_username') || '',
+                repo: localStorage.getItem('github_repo') || '',
+                token: localStorage.getItem('github_token') || ''
+            };
+        };
+
+        const fetchMenuFromGithub = async () => {
+            const { username, repo, token } = getGithubCredentials();
+            if (!username || !repo) return null;
+
+            try {
+                const url = `https://api.github.com/repos/${username}/${repo}/contents/data.json`;
+                const headers = token ? { 'Authorization': `token ${token}` } : {};
+                const res = await fetch(url + '?t=' + new Date().getTime(), { headers });
+                
+                if (!res.ok) throw new Error('API Error');
+                
+                const data = await res.json();
+                const content = decodeURIComponent(escape(atob(data.content)));
+                return { menuData: JSON.parse(content), sha: data.sha };
+            } catch (err) {
+                console.error(err);
+                try {
+                    const fallbackRes = await fetch('../data.json?t=' + new Date().getTime());
+                    const fallbackData = await fallbackRes.json();
+                    return { menuData: fallbackData, sha: null };
+                } catch (fallbackErr) {
+                    return null;
+                }
+            }
+        };
+
+        const saveMenuToGithub = async (newData, fileSha) => {
+            const { username, repo, token } = getGithubCredentials();
+            if (!username || !repo || !token) throw new Error("Eksik bilgi");
+
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2))));
+            
+            const res = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/data.json`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: `Admin Panel: Menü güncellendi`,
+                    content: content,
+                    sha: fileSha
+                })
+            });
+
+            if (!res.ok) throw new Error('Kayıt başarısız oldu');
+            const result = await res.json();
+            return result.content.sha;
+        };
+
+        // --- COMPONENTS ---
+
+        const IconPicker = ({ value, onChange }) => {
+            const icons = ['coffee', 'snowflake', 'cake-slice', 'dices', 'pizza', 'sandwich', 'croissant', 'cup-soda', 'martini', 'star', 'heart', 'flame'];
+            return (
+                <div className="flex gap-2 flex-wrap">
+                    {icons.map(icon => (
+                        <button key={icon} type="button" onClick={() => onChange(icon)} className={`p-3 rounded-xl border ${value === icon ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-500 hover:bg-gray-100'} flex items-center justify-center transition-colors`}>
+                            <i data-lucide={icon} className="w-5 h-5"></i>
+                        </button>
+                    ))}
+                </div>
+            );
+        };
+
+        const Toggle = ({ label, checked, onChange }) => (
+            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <span className="text-sm font-semibold text-gray-700">{label}</span>
+                <div className="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                    <label className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP ---
 
         const App = () => {
-            const [creds, setCreds] = useState(() => JSON.parse(localStorage.getItem('fika_github_creds')) || null);
+            const creds = getGithubCredentials();
+            const [isLoggedIn, setIsLoggedIn] = useState(!!(creds.username && creds.repo && creds.token));
             const [menuData, setMenuData] = useState(null);
-            const [dataSha, setDataSha] = useState(null);
-            const [loading, setLoading] = useState(false);
-            const [error, setError] = useState('');
+            const [fileSha, setFileSha] = useState(null);
+            const [isLoading, setIsLoading] = useState(false);
             
-            const [activeCat, setActiveCat] = useState(null);
-            const [editingItem, setEditingItem] = useState(null); // { item, index, isNew }
-            const [isSaving, setIsSaving] = useState(false);
-
+            const [activeView, setActiveView] = useState('products'); // products, daily, slot, settings
+            
             useEffect(() => {
-                if (creds) {
-                    fetchData();
+                if (isLoggedIn) {
+                    loadData();
                 }
-                lucide.createIcons();
-            }, [creds]);
+            }, [isLoggedIn]);
 
             useEffect(() => {
                 lucide.createIcons();
-            }, [menuData, activeCat, editingItem, error, loading]);
+            });
 
-            const handleLogin = (e) => {
-                e.preventDefault();
-                const form = e.target;
-                const newCreds = {
-                    username: form.username.value.trim(),
-                    repo: form.repo.value.trim(),
-                    token: form.token.value.trim()
-                };
-                localStorage.setItem('fika_github_creds', JSON.stringify(newCreds));
-                setCreds(newCreds);
-            };
-
-            const logout = () => {
-                localStorage.removeItem('fika_github_creds');
-                setCreds(null);
-                setMenuData(null);
-            };
-
-            const getApiUrl = (path) => `https://api.github.com/repos/${creds.username}/${creds.repo}/contents/${path}`;
-
-            const fetchWithAuth = async (url, options = {}) => {
-                const res = await fetch(url, {
-                    ...options,
-                    headers: {
-                        'Authorization': `token ${creds.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        ...options.headers
+            const loadData = async () => {
+                setIsLoading(true);
+                const result = await fetchMenuFromGithub();
+                if (result) {
+                    if (!result.menuData._Config) {
+                        result.menuData._Config = { dailySuggestion: {}, slotConfig: [] };
                     }
-                });
-                if (!res.ok) throw new Error(await res.text());
-                return res.json();
-            };
-
-            const fetchData = async () => {
-                setLoading(true);
-                setError('');
-                try {
-                    const res = await fetchWithAuth(getApiUrl('data.json') + `?ref=main&t=${Date.now()}`); // Cache bust
-                    const content = b64_to_utf8(res.content);
-                    const parsed = JSON.parse(content);
-                    setMenuData(parsed);
-                    setDataSha(res.sha);
-                    if (!activeCat) setActiveCat(Object.keys(parsed)[0]);
-                } catch (err) {
-                    console.error(err);
-                    setError('Veriler çekilirken hata oluştu. Depo adı veya Token yanlış olabilir.');
+                    if (!result.menuData._Config.slotConfig) {
+                        result.menuData._Config.slotConfig = [];
+                    }
+                    setMenuData(result.menuData);
+                    setFileSha(result.sha);
                 }
-                setLoading(false);
+                setIsLoading(false);
             };
 
-            const saveMenuToGithub = async (newData) => {
-                setIsSaving(true);
-                setError('');
+            const handleSaveData = async (newData) => {
+                setIsLoading(true);
                 try {
-                    const content = utf8_to_b64(JSON.stringify(newData, null, 2));
-                    const body = {
-                        message: 'Admin Panel: Menü güncellendi',
-                        content: content,
-                        sha: dataSha,
-                        branch: 'main'
-                    };
-                    const res = await fetchWithAuth(getApiUrl('data.json'), {
-                        method: 'PUT',
-                        body: JSON.stringify(body)
-                    });
-                    
+                    const newSha = await saveMenuToGithub(newData, fileSha);
                     setMenuData(newData);
-                    setDataSha(res.content.sha);
-                    setEditingItem(null);
-                } catch (err) {
-                    console.error(err);
-                    setError('Kaydedilirken hata oluştu. Lütfen tekrar deneyin.');
+                    setFileSha(newSha);
+                    return true;
+                } catch (e) {
+                    alert('Kayıt sırasında hata oluştu. Github Token yetkilerinizi kontrol edin.');
+                    return false;
+                } finally {
+                    setIsLoading(false);
                 }
-                setIsSaving(false);
             };
 
-            const uploadImage = async (file) => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                        try {
-                            const base64Data = reader.result.split(',')[1];
-                            const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-                            const path = `images/${Date.now()}-${cleanName}`;
-                            
-                            await fetchWithAuth(getApiUrl(path), {
-                                method: 'PUT',
-                                body: JSON.stringify({
-                                    message: `Admin Panel: Fotoğraf yüklendi ${cleanName}`,
-                                    content: base64Data,
-                                    branch: 'main'
-                                })
-                            });
-                            resolve(path);
-                        } catch (err) {
-                            reject(err);
-                        }
-                    };
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            };
+            if (!isLoggedIn) {
+                return <LoginScreen onLogin={() => setIsLoggedIn(true)} />;
+            }
 
-            const handleDelete = async (catName, index) => {
-                if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
-                const newData = { ...menuData };
-                newData[catName].splice(index, 1);
-                await saveMenuToGithub(newData);
-            };
+            if (!menuData) {
+                return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
+            }
 
-            const handleSaveItem = async (e) => {
+            return (
+                <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+                    {/* Sidebar / Bottom Nav */}
+                    <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 md:border-t-0 md:border-r md:w-64 md:top-0 md:h-screen md:flex md:flex-col z-50">
+                        <div className="hidden md:block p-6">
+                            <h1 className="text-2xl font-bold text-primary">Fika Admin</h1>
+                            <p className="text-xs text-gray-500">Yönetim Paneli V2</p>
+                        </div>
+                        <div className="flex md:flex-col justify-around md:justify-start w-full md:flex-1 p-2 md:p-4 gap-2">
+                            <NavButton icon="layout-grid" label="Menü" active={activeView === 'products'} onClick={() => setActiveView('products')} />
+                            <NavButton icon="sparkles" label="Günün İkilisi" active={activeView === 'daily'} onClick={() => setActiveView('daily')} />
+                            <NavButton icon="dices" label="Slot Makinesi" active={activeView === 'slot'} onClick={() => setActiveView('slot')} />
+                            <NavButton icon="settings" label="Ayarlar" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
+                        </div>
+                    </nav>
+
+                    {/* Main Content Area */}
+                    <main className="flex-1 p-4 md:p-8 w-full max-w-5xl mx-auto">
+                        {isLoading && (
+                            <div className="fixed inset-0 z-[100] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <p className="mt-4 font-bold text-gray-700">Senkronize Ediliyor...</p>
+                            </div>
+                        )}
+
+                        {activeView === 'products' && <ProductsView menuData={menuData} onSave={handleSaveData} />}
+                        {activeView === 'daily' && <DailyView menuData={menuData} onSave={handleSaveData} />}
+                        {activeView === 'slot' && <SlotView menuData={menuData} onSave={handleSaveData} />}
+                        {activeView === 'settings' && <SettingsView />}
+                    </main>
+                </div>
+            );
+        };
+
+        const NavButton = ({ icon, label, active, onClick }) => (
+            <button 
+                onClick={onClick}
+                className={`flex flex-col md:flex-row items-center md:justify-start gap-1 md:gap-3 p-3 rounded-xl w-full transition-colors ${active ? 'text-primary bg-primary/10 font-bold' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'}`}
+            >
+                <i data-lucide={icon} className="w-6 h-6 md:w-5 md:h-5"></i>
+                <span className="text-[10px] md:text-sm">{label}</span>
+            </button>
+        );
+
+        // --- VIEWS ---
+
+        const ProductsView = ({ menuData, onSave }) => {
+            const categories = Object.keys(menuData).filter(c => c !== '_Config');
+            const [activeCat, setActiveCat] = useState(categories[0] || '');
+            const [isEditingItem, setIsEditingItem] = useState(null); // null veya { index: number, isNew: boolean, item: object }
+            const [isEditingCategory, setIsEditingCategory] = useState(false);
+
+            useEffect(() => {
+                if (!categories.includes(activeCat) && categories.length > 0) {
+                    setActiveCat(categories[0]);
+                }
+            }, [menuData]);
+
+            const handleSaveItem = async (e, oldItemIndex, isNew) => {
                 e.preventDefault();
-                setIsSaving(true);
-                
                 const form = e.target;
-                const fileInput = form.imageFile;
                 
-                let imgPath = form.imgUrl.value;
-                
-                if (fileInput.files.length > 0) {
-                    try {
-                        imgPath = await uploadImage(fileInput.files[0]);
-                    } catch (err) {
-                        setError('Fotoğraf yüklenemedi: ' + err.message);
-                        setIsSaving(false);
-                        return;
-                    }
-                }
+                let imgData = form.imgPreview.value || form.imgUrl.value;
+                if (!imgData) { alert("Lütfen bir görsel ekleyin"); return; }
 
-                const tags = form.tags.value.split(',').map(t => t.trim()).filter(t => t);
-                
                 const newItem = {
                     name: form.name.value,
                     price: form.price.value,
                     desc: form.desc.value,
-                    img: imgPath,
-                    tags: tags
+                    img: imgData,
+                    tags: form.tags.value.split(',').map(t => t.trim()).filter(t => t),
+                    isActive: form.isActive.checked
                 };
 
                 const newData = { ...menuData };
-                if (editingItem.isNew) {
-                    if (!newData[activeCat]) newData[activeCat] = [];
-                    newData[activeCat].push(newItem);
+                if (isNew) {
+                    newData[activeCat] = [newItem, ...(newData[activeCat] || [])];
                 } else {
-                    newData[activeCat][editingItem.index] = newItem;
+                    newData[activeCat][oldItemIndex] = newItem;
                 }
 
-                await saveMenuToGithub(newData);
+                if (await onSave(newData)) setIsEditingItem(null);
             };
 
-            if (!creds) {
+            const handleDeleteItem = async (idx) => {
+                if(!confirm('Ürünü silmek istediğinize emin misiniz?')) return;
+                const newData = { ...menuData };
+                newData[activeCat].splice(idx, 1);
+                onSave(newData);
+            };
+
+            const handleAddCategory = async () => {
+                const name = prompt('Yeni kategori adı:');
+                if(!name || menuData[name]) return;
+                const newData = { ...menuData, [name]: [] };
+                if (await onSave(newData)) setActiveCat(name);
+            };
+
+            const handleRenameCategory = async () => {
+                const newName = prompt('Kategori için yeni ad:', activeCat);
+                if (!newName || newName === activeCat || menuData[newName]) return;
+                const newData = { ...menuData };
+                newData[newName] = newData[activeCat];
+                delete newData[activeCat];
+                
+                // Update Slot configs using this category
+                if(newData._Config.slotConfig) {
+                    newData._Config.slotConfig.forEach(slot => {
+                        const idx = slot.targetCategories.indexOf(activeCat);
+                        if(idx > -1) slot.targetCategories[idx] = newName;
+                    });
+                }
+
+                if (await onSave(newData)) setActiveCat(newName);
+            };
+
+            const handleDeleteCategory = async () => {
+                if(!confirm(`'${activeCat}' kategorisini ve içindeki TÜM ürünleri silmek istediğinize emin misiniz?`)) return;
+                const newData = { ...menuData };
+                delete newData[activeCat];
+                
+                // Remove from slot configs
+                if(newData._Config.slotConfig) {
+                    newData._Config.slotConfig.forEach(slot => {
+                        slot.targetCategories = slot.targetCategories.filter(c => c !== activeCat);
+                    });
+                }
+
+                onSave(newData);
+            };
+
+            const handleImageUpload = (e, imgPreviewInput) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => { imgPreviewInput.value = ev.target.result; imgPreviewInput.dispatchEvent(new Event('input', {bubbles:true})); };
+                reader.readAsDataURL(file);
+            };
+
+            if (isEditingItem) {
+                const { item, isNew, index } = isEditingItem;
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4">
-                        <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-                            <div className="text-center mb-8">
-                                <h1 className="text-2xl font-bold text-gray-800">Admin Girişi</h1>
-                                <p className="text-sm text-gray-500 mt-2">GitHub bilgilerinizi girerek menüyü yönetin.</p>
-                            </div>
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">GitHub Kullanıcı Adı</label>
-                                    <input name="username" required placeholder="örn: ahmet" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Depo (Repository) Adı</label>
-                                    <input name="repo" required placeholder="örn: qr-menu" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Personal Access Token (PAT)</label>
-                                    <input name="token" type="password" required placeholder="ghp_..." className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
-                                    <p className="text-xs text-gray-500 mt-1">* Token'ın 'repo' yetkisine sahip olması gerekir.</p>
-                                </div>
-                                <button type="submit" className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors">
-                                    Giriş Yap
-                                </button>
-                            </form>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 animate-[fadeIn_0.3s_ease-out]">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl md:text-2xl font-bold">{isNew ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}</h2>
+                            <button onClick={() => setIsEditingItem(null)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"><i data-lucide="x"></i></button>
                         </div>
+                        <form onSubmit={(e) => handleSaveItem(e, index, isNew)} className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Ürün Adı</label>
+                                <input name="name" required defaultValue={item.name} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Fiyat (Örn: 120₺)</label>
+                                <input name="price" required defaultValue={item.price} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Görsel (Dosya Seç veya URL)</label>
+                                <div className="flex gap-4 items-center">
+                                    <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 overflow-hidden shrink-0 bg-gray-50 flex items-center justify-center relative">
+                                        <img id="imgPreviewTag" src={item.img} onError={(e)=>e.target.style.display='none'} onLoad={(e)=>e.target.style.display='block'} className="w-full h-full object-cover" />
+                                        <i data-lucide="image" className="absolute text-gray-400 w-8 h-8 -z-10"></i>
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, document.getElementById('imgPreviewInput'))} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
+                                        <input id="imgPreviewInput" name="imgPreview" type="hidden" defaultValue={item.img} onInput={(e) => document.getElementById('imgPreviewTag').src = e.target.value} />
+                                        <input name="imgUrl" type="url" placeholder="Veya internetten resim URL'si yapıştır" defaultValue={item.img?.startsWith('http') ? item.img : ''} onChange={(e) => { if(e.target.value) document.getElementById('imgPreviewInput').value = e.target.value; document.getElementById('imgPreviewTag').src = e.target.value; }} className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Açıklama</label>
+                                <textarea name="desc" rows="3" defaultValue={item.desc} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Etiketler (Virgülle ayırın: Vegan, Yeni)</label>
+                                <input name="tags" defaultValue={(item.tags||[]).join(', ')} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+
+                            <Toggle label="Ürün Aktif (Menüde Göster)" checked={item.isActive !== false} onChange={(val) => { document.getElementById('isActiveInput').checked = val; }} />
+                            <input type="checkbox" id="isActiveInput" name="isActive" defaultChecked={item.isActive !== false} className="hidden" />
+
+                            <button type="submit" className="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-orange-600 transition-colors shadow-md shadow-primary/30 mt-6">
+                                Kaydet
+                            </button>
+                        </form>
                     </div>
                 );
             }
 
-            if (loading) {
-                return <div className="min-h-screen flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-                    <p className="mt-4 text-gray-600">Veriler GitHub'dan çekiliyor...</p>
-                </div>;
-            }
-
             return (
-                <div className="min-h-screen pb-20">
-                    <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center sticky top-0 z-40">
-                        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                            <i data-lucide="settings" className="w-5 h-5 text-primary"></i> 
-                            Menü Yönetimi
-                        </h1>
-                        <button onClick={logout} className="text-sm text-red-500 font-medium hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Çıkış Yap</button>
-                    </nav>
+                <div className="flex flex-col h-full animate-[fadeIn_0.3s_ease-out]">
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                        <h2 className="text-2xl font-bold">Kategoriler</h2>
+                        <button onClick={handleAddCategory} className="text-sm font-bold text-primary bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 flex items-center gap-2">
+                            <i data-lucide="plus" className="w-4 h-4"></i> Kategori Ekle
+                        </button>
+                    </div>
 
-                    {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-4 rounded relative">
-                            {error}
-                            <button onClick={() => setError('')} className="absolute top-3 right-3"><i data-lucide="x" className="w-4 h-4"></i></button>
-                        </div>
-                    )}
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-4 border-b border-gray-200 snap-x">
+                        {categories.map(cat => (
+                            <button 
+                                key={cat} 
+                                onClick={() => setActiveCat(cat)}
+                                className={`snap-start shrink-0 px-5 py-2.5 rounded-t-lg font-semibold text-sm transition-colors border-b-2 ${activeCat === cat ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
 
-                    {menuData && (
-                        <div className="max-w-5xl mx-auto mt-6 px-4 flex flex-col md:flex-row gap-6">
-                            
-                            {/* KATEGORİLER (SIDEBAR) */}
-                            <div className="w-full md:w-64 shrink-0">
-                                <div className="bg-white rounded-xl shadow-sm overflow-hidden sticky top-24">
-                                    <div className="p-4 bg-gray-50 border-b font-semibold text-gray-700 flex justify-between items-center">
-                                        Kategoriler
-                                    </div>
-                                    <div className="flex flex-row md:flex-col overflow-x-auto p-2 gap-1">
-                                        {Object.keys(menuData).filter(c => c !== '_Config').map(cat => (
-                                            <button 
-                                                key={cat}
-                                                onClick={() => setActiveCat(cat)}
-                                                className={`whitespace-nowrap px-4 py-3 text-left rounded-lg text-sm font-medium transition-colors ${activeCat === cat ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-100'}`}
-                                            >
-                                                {cat}
-                                            </button>
-                                        ))}
-                                        <div className="my-2 border-t"></div>
-                                        <button 
-                                            onClick={() => setActiveCat('_Config')}
-                                            className={`whitespace-nowrap px-4 py-3 text-left rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${activeCat === '_Config' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-                                        >
-                                            <i data-lucide="settings" className="w-4 h-4"></i>
-                                            Günün İkilisi Ayarı
-                                        </button>
+                    {activeCat && (
+                        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 min-h-[50vh]">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-xl font-bold">{activeCat}</h3>
+                                    <div className="flex gap-1 ml-2">
+                                        <button onClick={handleRenameCategory} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" className="w-4 h-4"></i></button>
+                                        <button onClick={handleDeleteCategory} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
                                     </div>
                                 </div>
+                                <button onClick={() => setIsEditingItem({ isNew: true, item: { name: '', price: '', desc: '', img: '', tags: [], isActive: true } })} className="w-full md:w-auto bg-gray-900 text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors shadow-sm">
+                                    <i data-lucide="plus" className="w-4 h-4"></i> Ürün Ekle
+                                </button>
                             </div>
 
-                            {/* ÜRÜN VEYA AYAR LİSTESİ */}
-                            <div className="flex-1">
-                                {activeCat === '_Config' ? (
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Günün İkilisi Ayarları</h2>
-                                        <form onSubmit={async (e) => {
-                                            e.preventDefault();
-                                            const form = e.target;
-                                            const newData = { ...menuData };
-                                            if (!newData._Config) newData._Config = {};
-                                            newData._Config.dailySuggestion = {
-                                                drinkName: form.drinkName.value,
-                                                foodName: form.foodName.value,
-                                                discountPercent: parseInt(form.discount.value) || 0
-                                            };
-                                            await saveMenuToGithub(newData);
-                                            alert("Ayarlar başarıyla kaydedildi!");
-                                        }} className="space-y-4 max-w-md">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {(menuData[activeCat] || []).map((item, idx) => (
+                                    <div key={idx} className={`flex bg-gray-50 rounded-xl border p-3 gap-3 ${item.isActive === false ? 'opacity-60 grayscale-[50%] border-gray-200' : 'border-gray-200 hover:border-primary/50'}`}>
+                                        <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-200">
+                                            <img src={item.img} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-between overflow-hidden">
                                             <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-1">Günün İçeceği (Tam Adı)</label>
-                                                <input name="drinkName" required defaultValue={menuData._Config?.dailySuggestion?.drinkName || ''} className="w-full px-4 py-2 border rounded-lg focus:ring-primary outline-none" />
+                                                <div className="flex justify-between items-start">
+                                                    <h4 className="font-bold text-gray-800 truncate">{item.name}</h4>
+                                                    {item.isActive === false && <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded font-bold shrink-0 ml-2">Pasif</span>}
+                                                </div>
+                                                <span className="text-sm font-semibold text-primary">{item.price}</span>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-1">Günün Yiyeceği (Tam Adı)</label>
-                                                <input name="foodName" required defaultValue={menuData._Config?.dailySuggestion?.foodName || ''} className="w-full px-4 py-2 border rounded-lg focus:ring-primary outline-none" />
+                                            <div className="flex justify-end gap-1 mt-2">
+                                                <button onClick={() => setIsEditingItem({ isNew: false, index: idx, item })} className="p-2 bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg shadow-sm border border-gray-200"><i data-lucide="edit-2" className="w-4 h-4"></i></button>
+                                                <button onClick={() => handleDeleteItem(idx)} className="p-2 bg-white text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg shadow-sm border border-gray-200"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-1">İndirim Yüzdesi (%)</label>
-                                                <input name="discount" type="number" required defaultValue={menuData._Config?.dailySuggestion?.discountPercent || 15} className="w-full px-4 py-2 border rounded-lg focus:ring-primary outline-none" />
-                                            </div>
-                                            <button type="submit" disabled={isSaving} className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors mt-4">
-                                                {isSaving ? 'Kaydediliyor...' : 'Ayarları Kaydet'}
-                                            </button>
-                                        </form>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <>
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-2xl font-bold text-gray-800">{activeCat}</h2>
-                                            <button 
-                                                onClick={() => setEditingItem({ isNew: true, item: { name: '', price: '', desc: '', img: '', tags: [] } })}
-                                                className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-orange-600 transition-colors shadow-sm"
-                                            >
-                                                <i data-lucide="plus" className="w-4 h-4"></i> Yeni Ürün
-                                            </button>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {(menuData[activeCat] || []).map((item, idx) => (
-                                                <div key={idx} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-                                                    <div className="h-40 bg-gray-200 relative">
-                                                        <img src={item.img.startsWith('http') ? item.img : `../${item.img}`} className="w-full h-full object-cover" onError={(e)=>{e.target.src='https://via.placeholder.com/400x300?text=Görsel+Yok'}} />
-                                                        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded font-bold text-sm text-gray-800">{item.price}</div>
-                                                    </div>
-                                                    <div className="p-4 flex-1 flex flex-col">
-                                                        <h3 className="font-bold text-lg text-gray-800 mb-1 line-clamp-1">{item.name}</h3>
-                                                        <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">{item.desc}</p>
-                                                        <div className="flex gap-2 justify-end mt-2 pt-3 border-t">
-                                                            <button onClick={() => setEditingItem({ isNew: false, index: idx, item })} className="text-blue-500 hover:bg-blue-50 px-3 py-1.5 rounded flex items-center gap-1 text-sm font-medium">
-                                                                <i data-lucide="edit-2" className="w-4 h-4"></i> Düzenle
-                                                            </button>
-                                                            <button onClick={() => handleDelete(activeCat, idx)} className="text-red-500 hover:bg-red-50 px-3 py-1.5 rounded flex items-center gap-1 text-sm font-medium">
-                                                                <i data-lucide="trash-2" className="w-4 h-4"></i> Sil
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {(!menuData[activeCat] || menuData[activeCat].length === 0) && (
-                                                <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-xl border border-dashed">
-                                                    Bu kategoride hiç ürün yok.
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
+                                ))}
+                                {(!menuData[activeCat] || menuData[activeCat].length === 0) && (
+                                    <div className="col-span-full py-12 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                                        Bu kategoride hiç ürün yok.
+                                    </div>
                                 )}
                             </div>
                         </div>
                     )}
+                </div>
+            );
+        };
 
-                    {/* DÜZENLEME MODALI */}
-                    {editingItem && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                                <div className="p-5 border-b flex justify-between items-center bg-gray-50">
-                                    <h3 className="font-bold text-lg text-gray-800">{editingItem.isNew ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}</h3>
-                                    <button onClick={() => !isSaving && setEditingItem(null)} className="text-gray-400 hover:text-gray-600"><i data-lucide="x" className="w-5 h-5"></i></button>
-                                </div>
-                                <form onSubmit={handleSaveItem} className="p-5 overflow-y-auto space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="col-span-2 sm:col-span-1">
-                                            <label className="block text-xs font-bold text-gray-700 mb-1">Ürün Adı</label>
-                                            <input name="name" required defaultValue={editingItem.item.name} className="w-full px-3 py-2 border rounded-lg focus:ring-primary outline-none text-sm" />
-                                        </div>
-                                        <div className="col-span-2 sm:col-span-1">
-                                            <label className="block text-xs font-bold text-gray-700 mb-1">Fiyat (örn: 120₺)</label>
-                                            <input name="price" required defaultValue={editingItem.item.price} className="w-full px-3 py-2 border rounded-lg focus:ring-primary outline-none text-sm" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 mb-1">Açıklama</label>
-                                        <textarea name="desc" rows="3" required defaultValue={editingItem.item.desc} className="w-full px-3 py-2 border rounded-lg focus:ring-primary outline-none text-sm resize-none"></textarea>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 mb-1">Etiketler (Virgülle ayırın)</label>
-                                        <input name="tags" defaultValue={(editingItem.item.tags || []).join(', ')} placeholder="Sıcak, Tatlı, Vegan..." className="w-full px-3 py-2 border rounded-lg focus:ring-primary outline-none text-sm" />
-                                    </div>
+        const DailyView = ({ menuData, onSave }) => {
+            const allProducts = Object.keys(menuData)
+                .filter(c => c !== '_Config' && c !== 'Extralar')
+                .flatMap(cat => menuData[cat].filter(item => item.isActive !== false));
+            
+            const config = menuData._Config?.dailySuggestion || {};
+            const [drink, setDrink] = useState(config.drinkName || '');
+            const [food, setFood] = useState(config.foodName || '');
+            const [discount, setDiscount] = useState(config.discountPercent || 15);
 
-                                    <div className="border-t pt-4 mt-2">
-                                        <label className="block text-xs font-bold text-gray-700 mb-2">Görsel (Cihazdan Yükle VEYA URL Gir)</label>
-                                        
-                                        <div className="space-y-3">
-                                            <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition-colors text-center">
-                                                <input type="file" name="imageFile" accept="image/jpeg, image/png, image/webp" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                                <div className="flex flex-col items-center pointer-events-none">
-                                                    <i data-lucide="upload-cloud" className="w-8 h-8 text-gray-400 mb-2"></i>
-                                                    <span className="text-sm font-medium text-gray-600">Fotoğraf Yüklemek İçin Tıkla</span>
-                                                    <span className="text-xs text-gray-400 mt-1">(Yeni fotoğraf seçerseniz alttaki URL yoksayılır)</span>
-                                                </div>
-                                            </div>
+            const handleSave = (e) => {
+                e.preventDefault();
+                const newData = { ...menuData };
+                if(!newData._Config) newData._Config = {};
+                newData._Config.dailySuggestion = { drinkName: drink, foodName: food, discountPercent: discount };
+                onSave(newData);
+            };
 
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1 h-px bg-gray-200"></div>
-                                                <span className="text-xs text-gray-400 font-medium">VEYA URL GİR</span>
-                                                <div className="flex-1 h-px bg-gray-200"></div>
-                                            </div>
+            return (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 max-w-2xl mx-auto animate-[fadeIn_0.3s_ease-out]">
+                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100">
+                        <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center shrink-0">
+                            <i data-lucide="sparkles" className="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold">Günün İkilisi</h2>
+                            <p className="text-sm text-gray-500">Müşterilerinize önereceğiniz özel ikili menüyü ayarlayın.</p>
+                        </div>
+                    </div>
 
-                                            <input name="imgUrl" defaultValue={editingItem.item.img} placeholder="Mevcut URL veya Dosya Yolu" className="w-full px-3 py-2 border rounded-lg focus:ring-primary outline-none text-sm text-gray-500 bg-gray-50" />
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-4 flex gap-3">
-                                        <button type="button" onClick={() => setEditingItem(null)} disabled={isSaving} className="flex-1 px-4 py-2 border rounded-lg text-gray-700 font-bold hover:bg-gray-50 disabled:opacity-50">İptal</button>
-                                        <button type="submit" disabled={isSaving} className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-orange-600 disabled:opacity-50 flex items-center justify-center gap-2">
-                                            {isSaving ? <span className="loader !w-4 !h-4 !border-white !border-t-transparent"></span> : <i data-lucide="save" className="w-4 h-4"></i>}
-                                            {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
-                                        </button>
-                                    </div>
-                                </form>
+                    <form onSubmit={handleSave} className="space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Günün İçeceği</label>
+                                <select value={drink} onChange={e => setDrink(e.target.value)} required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none appearance-none">
+                                    <option value="" disabled>Ürün Seçin</option>
+                                    {allProducts.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Günün Yiyeceği / Tatlısı</label>
+                                <select value={food} onChange={e => setFood(e.target.value)} required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none appearance-none">
+                                    <option value="" disabled>Ürün Seçin</option>
+                                    {allProducts.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+                                </select>
                             </div>
                         </div>
-                    )}
 
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">İndirim Oranı (%)</label>
+                            <input type="number" min="0" max="100" value={discount} onChange={e => setDiscount(Number(e.target.value))} required className="w-full md:w-1/3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                        </div>
+
+                        <button type="submit" className="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-orange-600 transition-colors shadow-md mt-4">
+                            Ayarları Kaydet
+                        </button>
+                    </form>
+                </div>
+            );
+        };
+
+        const SlotView = ({ menuData, onSave }) => {
+            const categories = Object.keys(menuData).filter(c => c !== '_Config');
+            const [tokens, setTokens] = useState(menuData._Config?.slotConfig || []);
+            const [editingToken, setEditingToken] = useState(null);
+
+            const handleSaveToken = (e, index) => {
+                e.preventDefault();
+                const form = e.target;
+                
+                // Get checked categories
+                const targets = [];
+                categories.forEach(cat => {
+                    if(form[`cat_${cat}`]?.checked) targets.push(cat);
+                });
+
+                const newToken = {
+                    id: form.id.value || 't_' + Date.now(),
+                    label: form.label.value,
+                    icon: form.iconVal.value,
+                    class: form.colorClass.value,
+                    targetCategories: targets
+                };
+
+                const newTokens = [...tokens];
+                if(index === -1) newTokens.push(newToken);
+                else newTokens[index] = newToken;
+
+                const newData = { ...menuData };
+                if(!newData._Config) newData._Config = {};
+                newData._Config.slotConfig = newTokens;
+                
+                onSave(newData).then(() => {
+                    setTokens(newTokens);
+                    setEditingToken(null);
+                });
+            };
+
+            const handleDelete = (idx) => {
+                if(!confirm('Bu jetonu silmek istediğinize emin misiniz?')) return;
+                const newTokens = [...tokens];
+                newTokens.splice(idx, 1);
+                
+                const newData = { ...menuData };
+                newData._Config.slotConfig = newTokens;
+                onSave(newData).then(() => setTokens(newTokens));
+            };
+
+            const colors = [
+                { id: 'coin-bronze', name: 'Bronz', hex: '#D2691E' },
+                { id: 'coin-silver', name: 'Gümüş', hex: '#A1A1AA' },
+                { id: 'coin-gold', name: 'Altın', hex: '#EAB308' },
+                { id: 'coin-rose', name: 'Rose', hex: '#DB2777' },
+            ];
+
+            if (editingToken) {
+                const { token, index } = editingToken;
+                return (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-[fadeIn_0.3s_ease-out]">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold">{index === -1 ? 'Yeni Jeton Ekle' : 'Jeton Düzenle'}</h2>
+                            <button onClick={() => setEditingToken(null)} className="p-2 hover:bg-gray-100 rounded-full"><i data-lucide="x"></i></button>
+                        </div>
+                        
+                        <form onSubmit={(e) => handleSaveToken(e, index)} className="space-y-6">
+                            <input type="hidden" name="id" value={token.id || ''} />
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Jeton Adı (Kısa tutun)</label>
+                                <input name="label" required defaultValue={token.label} placeholder="Örn: Sıcak" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary" />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Jeton Rengi</label>
+                                <div className="flex gap-4">
+                                    {colors.map(c => (
+                                        <label key={c.id} className="cursor-pointer group flex flex-col items-center gap-2">
+                                            <input type="radio" name="colorClass" value={c.id} defaultChecked={token.class === c.id || (index===-1 && c.id==='coin-bronze')} className="hidden peer" />
+                                            <div className="w-12 h-12 rounded-full border-4 border-transparent peer-checked:border-primary transition-all flex items-center justify-center shadow-sm" style={{backgroundColor: c.hex}}></div>
+                                            <span className="text-xs font-semibold text-gray-500 peer-checked:text-primary">{c.name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">İkon</label>
+                                <IconPicker value={token.icon || 'coffee'} onChange={(val) => { document.getElementById('iconVal').value = val; setEditingToken({...editingToken, token: {...token, icon: val}}) }} />
+                                <input type="hidden" id="iconVal" name="iconVal" value={token.icon || 'coffee'} />
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                <label className="block text-sm font-bold text-gray-700 mb-3">Bu Jeton Hangi Kategorilerden Çekiliş Yapsın?</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {categories.map(cat => (
+                                        <label key={cat} className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name={`cat_${cat}`} defaultChecked={(token.targetCategories || []).includes(cat) || (index===-1 && token.targetCategories?.length === 0)} className="w-4 h-4 text-primary rounded focus:ring-primary" />
+                                            <span className="text-sm text-gray-700">{cat}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-3 italic">* Hiçbir kategori seçmezseniz "Tüm Menü" geçerli olur.</p>
+                            </div>
+
+                            <button type="submit" className="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-orange-600 transition-colors shadow-md">
+                                Jetonu Kaydet
+                            </button>
+                        </form>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="animate-[fadeIn_0.3s_ease-out] max-w-4xl mx-auto">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold">Slot Makinesi Jetonları</h2>
+                            <p className="text-sm text-gray-500 mt-1">Müşterilerin çarkıfelek oynayacağı jetonları yönetin.</p>
+                        </div>
+                        <button onClick={() => setEditingToken({ index: -1, token: { targetCategories: [] } })} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-800 shadow-sm shrink-0">
+                            <i data-lucide="plus" className="w-4 h-4"></i> Yeni Jeton
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {tokens.map((token, idx) => {
+                            const colorHex = colors.find(c => c.id === token.class)?.hex || '#ccc';
+                            return (
+                                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col hover:border-primary/50 transition-colors">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-inner" style={{backgroundColor: colorHex}}>
+                                            <i data-lucide={token.icon} className="w-6 h-6"></i>
+                                        </div>
+                                        <div className="flex gap-1">
+                                            <button onClick={() => setEditingToken({ index: idx, token })} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg"><i data-lucide="edit-3" className="w-4 h-4"></i></button>
+                                            <button onClick={() => handleDelete(idx)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
+                                        </div>
+                                    </div>
+                                    <h3 className="font-bold text-lg mb-1">{token.label}</h3>
+                                    <p className="text-xs text-gray-500 line-clamp-2">
+                                        {(token.targetCategories && token.targetCategories.length > 0) ? token.targetCategories.join(', ') : 'Tüm Menü'}
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const SettingsView = () => {
+            const handleLogout = () => {
+                localStorage.clear();
+                window.location.reload();
+            };
+
+            return (
+                <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+                        <div className="w-12 h-12 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center shrink-0">
+                            <i data-lucide="github" className="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold">Hesap Ayarları</h2>
+                            <p className="text-sm text-gray-500">Github bağlantı bilgileri.</p>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-4 mb-8">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Github Kullanıcı Adı</label>
+                            <div className="font-semibold">{localStorage.getItem('github_username')}</div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Depo Adı</label>
+                            <div className="font-semibold">{localStorage.getItem('github_repo')}</div>
+                        </div>
+                    </div>
+
+                    <button onClick={handleLogout} className="w-full py-4 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="log-out" className="w-5 h-5"></i>
+                        Çıkış Yap (Bağlantıyı Kes)
+                    </button>
+                </div>
+            );
+        };
+
+        const LoginScreen = ({ onLogin }) => {
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                localStorage.setItem('github_username', e.target.username.value.trim());
+                localStorage.setItem('github_repo', e.target.repo.value.trim());
+                localStorage.setItem('github_token', e.target.token.value.trim());
+                onLogin();
+            };
+
+            return (
+                <div className="min-h-screen bg-primary flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md animate-[fadeIn_0.5s_ease-out]">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="lock" className="w-8 h-8"></i>
+                            </div>
+                            <h1 className="text-3xl font-bold text-gray-800">Admin Girişi</h1>
+                            <p className="text-gray-500 text-sm mt-2">Github API bilgilerinizi girerek menünüzü yönetmeye başlayın.</p>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Github Kullanıcı Adı</label>
+                                <input name="username" required placeholder="Örn: ahmet123" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Github Repo Adı</label>
+                                <input name="repo" required placeholder="Örn: qr-menu" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Personal Access Token</label>
+                                <input name="token" required type="password" placeholder="ghp_..." className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <button type="submit" className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition-colors shadow-lg mt-4">
+                                Giriş Yap
+                            </button>
+                        </form>
+                    </div>
                 </div>
             );
         };
