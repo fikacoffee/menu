@@ -144,9 +144,8 @@
             }
         };
 
-        const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800";        // MenuData is now fetched from data.json.", "tags": ["Vegan", "Laktozsuz"]}, {"name": "Espresso Shot", "price": "45₺", "img": "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&q=80&w=800", "desc": "Kahvenizin sertliğini artırmak için ekstra bir shot taze espresso.", "tags": ["Sertlik Arttırıcı"]}, {"name": "Premium Su", "price": "25₺", "img": "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&q=80&w=800", "desc": "Cam şişede doğal kaynak suyu.", "tags": ["Ferah"]}, {"name": "Premium Soda", "price": "65₺", "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=800", "desc": "Cam şişede doğal maden suyu.", "tags": ["Mineralli"]}]};
-        const categories = Object.keys(menuData);
-
+        const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800";
+        // MenuData is now fetched from data.json.
         const Jetonlar = [
             { id: 'sicak', label: 'Sıcak', icon: 'coffee', class: 'coin-bronze' },
             { id: 'soguk', label: 'Soğuk', icon: 'snowflake', class: 'coin-silver' },
@@ -195,7 +194,8 @@
                     .then(res => res.json())
                     .then(data => {
                         setMenuData(data);
-                        setActiveTab(Object.keys(data)[0]);
+                        const cats = Object.keys(data).filter(c => c !== '_Config');
+                        setActiveTab(cats[0]);
                         setIsLoading(false);
                     })
                     .catch(err => {
@@ -204,39 +204,40 @@
                     });
             }, []);
 
-            const categories = menuData ? Object.keys(menuData) : [];
+            const categories = menuData ? Object.keys(menuData).filter(c => c !== '_Config') : [];
 
             const allItems = useMemo(() => {
                 if (!menuData) return [];
                 return Object.entries(menuData)
-                    .filter(([key]) => key !== 'Extralar')
+                    .filter(([key]) => key !== 'Extralar' && key !== '_Config')
                     .map(([_, items]) => items)
                     .flat();
-            }, []);
+            }, [menuData]);
 
             const dailySuggestion = useMemo(() => {
-                if (!menuData) return null;
-                const drinks = [...(menuData["Sıcak Kahveler"] || []), ...(menuData["Soğuk Kahveler"] || []), ...(menuData["Special Kahveler"] || [])];
-                const foods = menuData["Pastalar"];
+                if (!menuData || !menuData._Config || !menuData._Config.dailySuggestion) return null;
+                const config = menuData._Config.dailySuggestion;
                 
-                const today = new Date().toDateString();
-                let seed = 0;
-                for (let i = 0; i < today.length; i++) { seed += today.charCodeAt(i); }
+                let drink = null;
+                let food = null;
                 
-                const drinkIndex = seed % drinks.length;
-                const foodIndex = (seed * 2) % foods.length; 
-                
-                const drink = drinks[drinkIndex];
-                const food = foods[foodIndex];
+                Object.values(menuData).forEach(catItems => {
+                    if (Array.isArray(catItems)) {
+                        catItems.forEach(item => {
+                            if (item.name === config.drinkName) drink = item;
+                            if (item.name === config.foodName) food = item;
+                        });
+                    }
+                });
                 
                 if (!drink || !food) return null;
 
                 const parsePrice = (priceStr) => parseInt(priceStr.replace(/\D/g, '')) || 0;
                 const totalPrice = parsePrice(drink.price) + parsePrice(food.price);
-                const comboPrice = Math.floor(totalPrice * 0.85); 
+                const comboPrice = Math.floor(totalPrice * (1 - (config.discountPercent / 100))); 
                 
                 return { drink, food, totalPrice, comboPrice };
-            }, []);
+            }, [menuData]);
 
             const SLOT_ITEM_HEIGHT = 150;
             const TARGET_INDEX = 40; 

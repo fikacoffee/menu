@@ -768,5 +768,12 @@
         "Mineralli"
       ]
     }
-  ]
+  ],
+  "_Config": {
+    "dailySuggestion": {
+      "drinkName": "Latte",
+      "foodName": "Ada LOVE",
+      "discountPercent": 15
+    }
+  }
 }
