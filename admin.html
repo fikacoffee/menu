@@ -93,7 +93,10 @@
                 })
             });
 
-            if (!res.ok) throw new Error('Kayıt başarısız oldu');
+            if (!res.ok) {
+                const err = await res.json().catch(()=>({}));
+                throw new Error(err.message || 'Kayıt başarısız oldu');
+            }
             const result = await res.json();
             return result.content.sha;
         };
@@ -169,7 +172,8 @@
                     setFileSha(newSha);
                     return true;
                 } catch (e) {
-                    alert('Kayıt sırasında hata oluştu. Github Token yetkilerinizi kontrol edin.');
+                    console.error("Save Error:", e);
+                    alert(`Kayıt başarısız oldu: ${e.message}\nGithub Token yetkinizi veya yüklediğiniz görselin çok büyük olmadığını kontrol edin.`);
                     return false;
                 } finally {
                     setIsLoading(false);
@@ -327,7 +331,33 @@
                 const file = e.target.files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = (ev) => { imgPreviewInput.value = ev.target.result; imgPreviewInput.dispatchEvent(new Event('input', {bubbles:true})); };
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_SIZE = 800;
+
+                        if (width > height && width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        } else if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                        imgPreviewInput.value = compressedData; 
+                        imgPreviewInput.dispatchEvent(new Event('input', {bubbles:true}));
+                    };
+                    img.src = ev.target.result;
+                };
                 reader.readAsDataURL(file);
             };
 
