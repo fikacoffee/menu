@@ -2,14 +2,13 @@
   "Sıcak Kahveler": [
     {
       "name": "Latte",
-      "price": "120",
-      "desc": "Özenle çekilmiş taze espresso ve ipeksi sıcak süt köpüğünün yumuşak buluşması.",
+      "price": "120₺",
       "img": "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&q=80&w=800",
+      "desc": "Özenle çekilmiş taze espresso ve ipeksi sıcak süt köpüğünün yumuşak buluşması.",
       "tags": [
         "Sütlü",
         "Yumuşak İçim"
-      ],
-      "isActive": true
+      ]
     },
     {
       "name": "Mocha",
@@ -777,47 +776,10 @@
       "discountPercent": 15
     },
     "slotConfig": [
-      {
-        "id": "soguk",
-        "label": "Soğuk",
-        "icon": "snowflake",
-        "class": "coin-silver",
-        "targetCategories": [
-          "Soğuk Kahveler",
-          "Soğuk Special"
-        ]
-      },
-      {
-        "id": "tatli",
-        "label": "Tatlı",
-        "icon": "cake-slice",
-        "class": "coin-rose",
-        "targetCategories": [
-          "Pastalar"
-        ]
-      },
-      {
-        "id": "all",
-        "label": "Sürpriz",
-        "icon": "dices",
-        "class": "coin-gold",
-        "targetCategories": []
-      },
-      {
-        "id": "t_1779038248886",
-        "label": "asdasd",
-        "icon": "heart",
-        "class": "coin-gold",
-        "targetCategories": [
-          "Sıcak Kahveler",
-          "Soğuk Kahveler",
-          "Special Kahveler",
-          "Soğuk Special",
-          "Bitki Çayları",
-          "Pastalar",
-          "Extralar"
-        ]
-      }
+      { "id": "sicak", "label": "Sıcak", "icon": "coffee", "class": "coin-bronze", "targetCategories": ["Sıcak Kahveler", "Bitki Çayları"] },
+      { "id": "soguk", "label": "Soğuk", "icon": "snowflake", "class": "coin-silver", "targetCategories": ["Soğuk Kahveler", "Soğuk Special"] },
+      { "id": "tatli", "label": "Tatlı", "icon": "cake-slice", "class": "coin-rose", "targetCategories": ["Pastalar"] },
+      { "id": "all", "label": "Sürpriz", "icon": "dices", "class": "coin-gold", "targetCategories": [] }
     ]
   }
 }
