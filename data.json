@@ -822,6 +822,15 @@
         "icon": "dices",
         "class": "coin-gold",
         "targetCategories": []
+      },
+      {
+        "id": "t_1779047128011",
+        "label": "Bitki",
+        "icon": "heart",
+        "class": "coin-gold",
+        "targetCategories": [
+          "Bitki Çayları"
+        ]
       }
     ]
   }
