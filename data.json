@@ -69,7 +69,8 @@
       "tags": [
         "Sert",
         "Yoğun"
-      ]
+      ],
+      "isActive": false
     },
     {
       "name": "Flat White",
