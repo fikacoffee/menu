@@ -778,16 +778,6 @@
     },
     "slotConfig": [
       {
-        "id": "sicak",
-        "label": "Sıcak",
-        "icon": "coffee",
-        "class": "coin-bronze",
-        "targetCategories": [
-          "Sıcak Kahveler",
-          "Bitki Çayları"
-        ]
-      },
-      {
         "id": "soguk",
         "label": "Soğuk",
         "icon": "snowflake",
