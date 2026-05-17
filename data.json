@@ -8,7 +8,8 @@
       "tags": [
         "Sütlü",
         "Yumuşak İçim"
-      ]
+      ],
+      "isActive": false
     },
     {
       "name": "Mocha",
