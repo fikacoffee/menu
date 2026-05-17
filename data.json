@@ -782,9 +782,9 @@
   ],
   "_Config": {
     "dailySuggestion": {
-      "drinkName": "Ice Americano",
-      "foodName": "Siyah Çay",
-      "discountAmount": 145
+      "drinkName": "Mocha",
+      "foodName": "Tiramisu",
+      "discountAmount": 50
     },
     "slotConfig": [
       {
