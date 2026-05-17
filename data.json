@@ -48,7 +48,8 @@
       "tags": [
         "Fındıklı",
         "Aromalı"
-      ]
+      ],
+      "isActive": false
     },
     {
       "name": "Cappuccino",
@@ -776,10 +777,42 @@
       "discountPercent": 15
     },
     "slotConfig": [
-      { "id": "sicak", "label": "Sıcak", "icon": "coffee", "class": "coin-bronze", "targetCategories": ["Sıcak Kahveler", "Bitki Çayları"] },
-      { "id": "soguk", "label": "Soğuk", "icon": "snowflake", "class": "coin-silver", "targetCategories": ["Soğuk Kahveler", "Soğuk Special"] },
-      { "id": "tatli", "label": "Tatlı", "icon": "cake-slice", "class": "coin-rose", "targetCategories": ["Pastalar"] },
-      { "id": "all", "label": "Sürpriz", "icon": "dices", "class": "coin-gold", "targetCategories": [] }
+      {
+        "id": "sicak",
+        "label": "Sıcak",
+        "icon": "coffee",
+        "class": "coin-bronze",
+        "targetCategories": [
+          "Sıcak Kahveler",
+          "Bitki Çayları"
+        ]
+      },
+      {
+        "id": "soguk",
+        "label": "Soğuk",
+        "icon": "snowflake",
+        "class": "coin-silver",
+        "targetCategories": [
+          "Soğuk Kahveler",
+          "Soğuk Special"
+        ]
+      },
+      {
+        "id": "tatli",
+        "label": "Tatlı",
+        "icon": "cake-slice",
+        "class": "coin-rose",
+        "targetCategories": [
+          "Pastalar"
+        ]
+      },
+      {
+        "id": "all",
+        "label": "Sürpriz",
+        "icon": "dices",
+        "class": "coin-gold",
+        "targetCategories": []
+      }
     ]
   }
 }
