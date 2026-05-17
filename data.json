@@ -812,6 +812,21 @@
         "icon": "dices",
         "class": "coin-gold",
         "targetCategories": []
+      },
+      {
+        "id": "t_1779038248886",
+        "label": "asdasd",
+        "icon": "heart",
+        "class": "coin-gold",
+        "targetCategories": [
+          "Sıcak Kahveler",
+          "Soğuk Kahveler",
+          "Special Kahveler",
+          "Soğuk Special",
+          "Bitki Çayları",
+          "Pastalar",
+          "Extralar"
+        ]
       }
     ]
   }
