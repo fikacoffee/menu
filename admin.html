@@ -11,6 +11,8 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -239,6 +241,16 @@
             const [activeCat, setActiveCat] = useState(categories[0] || '');
             const [isEditingItem, setIsEditingItem] = useState(null); // null veya { index: number, isNew: boolean, item: object }
             const [isEditingCategory, setIsEditingCategory] = useState(false);
+            const [cropImageSrc, setCropImageSrc] = useState(null);
+            const [liveCropData, setLiveCropData] = useState(null);
+            const cropperInstance = useRef(null);
+
+            useEffect(() => {
+                if (!cropImageSrc && cropperInstance.current) {
+                    cropperInstance.current.destroy();
+                    cropperInstance.current = null;
+                }
+            }, [cropImageSrc]);
 
             useEffect(() => { lucide.createIcons(); });
 
@@ -337,43 +349,82 @@
                 onSave(newData);
             };
 
-            const handleImageUpload = (e, imgPreviewInput) => {
+            const handleImageUpload = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        const MAX_SIZE = 800;
-
-                        if (width > height && width > MAX_SIZE) {
-                            height *= MAX_SIZE / width;
-                            width = MAX_SIZE;
-                        } else if (height > MAX_SIZE) {
-                            width *= MAX_SIZE / height;
-                            height = MAX_SIZE;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        const compressedData = canvas.toDataURL('image/jpeg', 0.7);
-                        imgPreviewInput.value = compressedData; 
-                        imgPreviewInput.dispatchEvent(new Event('input', {bubbles:true}));
-                    };
-                    img.src = ev.target.result;
+                    setCropImageSrc(ev.target.result);
                 };
                 reader.readAsDataURL(file);
+                e.target.value = '';
+            };
+
+            const handleSaveCrop = () => {
+                if(!cropperInstance.current) return;
+                const canvas = cropperInstance.current.getCroppedCanvas({
+                    maxWidth: 800,
+                    maxHeight: 800,
+                    fillColor: '#fff',
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                const compressedData = canvas.toDataURL('image/jpeg', 0.8);
+                const input = document.getElementById('imgPreviewInput');
+                if(input) {
+                    input.value = compressedData;
+                    input.dispatchEvent(new Event('input', {bubbles:true}));
+                }
+                setCropImageSrc(null);
             };
 
             if (isEditingItem) {
                 const { item, isNew, index } = isEditingItem;
                 return (
+                    <>
+                        {cropImageSrc && (
+                            <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-4">
+                                <div className="bg-white rounded-2xl w-full max-w-4xl p-6 flex flex-col md:flex-row gap-6 shadow-2xl">
+                                    <div className="flex-1 min-h-[300px] bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center relative">
+                                        <img 
+                                            src={cropImageSrc} 
+                                            style={{maxWidth: '100%', maxHeight: '500px'}} 
+                                            onLoad={(e) => {
+                                                if(cropperInstance.current) cropperInstance.current.destroy();
+                                                cropperInstance.current = new window.Cropper(e.target, {
+                                                    aspectRatio: 1,
+                                                    viewMode: 1,
+                                                    autoCropArea: 1,
+                                                    crop: () => {
+                                                        const canvas = cropperInstance.current.getCroppedCanvas({ width: 400, height: 400 });
+                                                        if(canvas) setLiveCropData(canvas.toDataURL('image/jpeg', 0.5));
+                                                    }
+                                                });
+                                            }} 
+                                        />
+                                    </div>
+                                    <div className="w-full md:w-64 flex flex-col gap-4">
+                                        <h3 className="font-bold text-gray-800 border-b pb-2">Canlı Önizlemeler</h3>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-2 font-semibold">Menü Görünümü (Kare)</p>
+                                            <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
+                                                <img src={liveCropData} className="w-full h-full object-cover" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-2 font-semibold">Detay Görünümü (Geniş)</p>
+                                            <div className="w-full h-24 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
+                                                <img src={liveCropData} className="w-full h-full object-cover" />
+                                            </div>
+                                        </div>
+                                        <div className="mt-auto pt-4 flex gap-2">
+                                            <button type="button" onClick={() => setCropImageSrc(null)} className="w-1/2 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors">İptal</button>
+                                            <button type="button" onClick={handleSaveCrop} className="w-1/2 py-3 rounded-xl bg-primary text-white font-bold hover:bg-orange-600 transition-colors shadow-md">Kırp</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 animate-[fadeIn_0.3s_ease-out]">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl md:text-2xl font-bold">{isNew ? 'Yeni Ürün Ekle' : 'Ürünü Düzenle'}</h2>
@@ -409,7 +460,7 @@
                                         <i data-lucide="image" className="absolute text-gray-400 w-8 h-8 -z-10"></i>
                                     </div>
                                     <div className="flex-1 space-y-2">
-                                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, document.getElementById('imgPreviewInput'))} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
+                                        <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
                                         <input id="imgPreviewInput" name="imgPreview" type="hidden" defaultValue={item.img} onInput={(e) => document.getElementById('imgPreviewTag').src = e.target.value} />
                                         <input name="imgUrl" type="url" placeholder="Veya internetten resim URL'si yapıştır" defaultValue={item.img?.startsWith('http') ? item.img : ''} onChange={(e) => { if(e.target.value) document.getElementById('imgPreviewInput').value = e.target.value; document.getElementById('imgPreviewTag').src = e.target.value; }} className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none" />
                                     </div>
@@ -437,6 +488,7 @@
                             </div>
                         </form>
                     </div>
+                    </>
                 );
             }
 
