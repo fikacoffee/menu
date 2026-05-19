@@ -773,8 +773,8 @@
   "_Config": {
     "dailySuggestion": {
       "drinkName": "Latte",
-      "foodName": "Ada LOVE",
-      "discountPercent": 15
+      "foodName": "Tiramisu",
+      "discountAmount": 100
     },
     "slotConfig": [
       {
