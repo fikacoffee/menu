@@ -774,7 +774,7 @@
     "dailySuggestion": {
       "drinkName": "Latte",
       "foodName": "Tiramisu",
-      "discountAmount": 100
+      "discountAmount": 0
     },
     "slotConfig": [
       {
