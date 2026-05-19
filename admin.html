@@ -392,14 +392,14 @@
                                                 onLoad={(e) => {
                                                 if(cropperInstance.current) cropperInstance.current.destroy();
                                                 cropperInstance.current = new window.Cropper(e.target, {
-                                                    aspectRatio: 1,
+                                                    aspectRatio: 2/1,
                                                     viewMode: 1,
                                                     dragMode: 'move',
                                                     zoomable: true,
                                                     toggleDragModeOnDblclick: false,
                                                     autoCropArea: 1,
                                                     crop: () => {
-                                                        const canvas = cropperInstance.current.getCroppedCanvas({ width: 400, height: 400 });
+                                                        const canvas = cropperInstance.current.getCroppedCanvas({ width: 400, height: 200 });
                                                         if(canvas) setLiveCropData(canvas.toDataURL('image/jpeg', 0.5));
                                                     }
                                                 });
