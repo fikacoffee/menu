@@ -19,7 +19,8 @@
       "tags": [
         "Çikolatalı",
         "Tatlı"
-      ]
+      ],
+      "isActive": false
     },
     {
       "name": "White Choc. Mocha",
