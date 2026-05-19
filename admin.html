@@ -384,15 +384,19 @@
                         {cropImageSrc && (
                             <div className="fixed inset-0 z-[200] bg-black/90 flex flex-col items-center justify-center p-4">
                                 <div className="bg-white rounded-2xl w-full max-w-4xl p-6 flex flex-col md:flex-row gap-6 shadow-2xl">
-                                    <div className="flex-1 min-h-[300px] bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center relative">
-                                        <img 
-                                            src={cropImageSrc} 
-                                            style={{maxWidth: '100%', maxHeight: '500px'}} 
-                                            onLoad={(e) => {
+                                    <div className="flex-1 flex flex-col gap-4">
+                                        <div className="flex-1 min-h-[400px] bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center relative">
+                                            <img 
+                                                src={cropImageSrc} 
+                                                style={{maxWidth: '100%', maxHeight: '500px'}} 
+                                                onLoad={(e) => {
                                                 if(cropperInstance.current) cropperInstance.current.destroy();
                                                 cropperInstance.current = new window.Cropper(e.target, {
                                                     aspectRatio: 1,
                                                     viewMode: 1,
+                                                    dragMode: 'move',
+                                                    zoomable: true,
+                                                    toggleDragModeOnDblclick: false,
                                                     autoCropArea: 1,
                                                     crop: () => {
                                                         const canvas = cropperInstance.current.getCroppedCanvas({ width: 400, height: 400 });
@@ -400,9 +404,16 @@
                                                     }
                                                 });
                                             }} 
-                                        />
+                                            />
+                                        </div>
+                                        <div className="flex justify-center gap-3">
+                                            <button type="button" onClick={() => cropperInstance.current?.zoom(0.1)} className="p-3 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 flex flex-col items-center gap-1 text-gray-600"><i data-lucide="zoom-in" className="w-5 h-5"></i><span className="text-[10px] font-bold">Yakınlaştır</span></button>
+                                            <button type="button" onClick={() => cropperInstance.current?.zoom(-0.1)} className="p-3 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 flex flex-col items-center gap-1 text-gray-600"><i data-lucide="zoom-out" className="w-5 h-5"></i><span className="text-[10px] font-bold">Uzaklaştır</span></button>
+                                            <button type="button" onClick={() => cropperInstance.current?.rotate(90)} className="p-3 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 flex flex-col items-center gap-1 text-gray-600"><i data-lucide="rotate-cw" className="w-5 h-5"></i><span className="text-[10px] font-bold">Döndür</span></button>
+                                            <button type="button" onClick={() => cropperInstance.current?.reset()} className="p-3 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 flex flex-col items-center gap-1 text-gray-600"><i data-lucide="rotate-ccw" className="w-5 h-5"></i><span className="text-[10px] font-bold">Sıfırla</span></button>
+                                        </div>
                                     </div>
-                                    <div className="w-full md:w-64 flex flex-col gap-4">
+                                    <div className="w-full md:w-64 flex flex-col gap-4 shrink-0">
                                         <h3 className="font-bold text-gray-800 border-b pb-2">Canlı Önizlemeler</h3>
                                         <div>
                                             <p className="text-xs text-gray-500 mb-2 font-semibold">Menü Görünümü (Kare)</p>
@@ -412,7 +423,7 @@
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500 mb-2 font-semibold">Detay Görünümü (Geniş)</p>
-                                            <div className="w-full h-24 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
+                                            <div className="w-full aspect-[2/1] rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200 relative">
                                                 <img src={liveCropData} className="w-full h-full object-cover" />
                                             </div>
                                         </div>
