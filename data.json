@@ -171,12 +171,14 @@
     {
       "name": "Belgian Chocolate",
       "price": "200₺",
-      "img": "https://images.unsplash.com/photo-1560508180-03f285f67ded?auto=format&fit=crop&q=80&w=800",
       "desc": "Orijinal Belçika çikolatasının eritilmesiyle hazırlanan lüks lezzet.",
+      "img": "images/belgian-chocolate-1779717899309-square.jpg",
+      "imgWide": "images/belgian-chocolate-1779717899309-wide.jpg",
       "tags": [
         "Premium",
         "Kahvesiz"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Salep",
