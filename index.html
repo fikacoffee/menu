@@ -765,14 +765,25 @@
                                     onClick={() => { SoundEngine.playClick(); setSelectedItem(null); }}
                                     className="absolute inset-0 bg-black/40 backdrop-blur-md"
                                 />
-                                <motion.div 
+                                <motion.div
                                     initial={{ y: "100%" }}
                                     animate={{ y: 0 }}
                                     exit={{ y: "100%" }}
                                     transition={{ type: "spring", damping: 32, stiffness: 300 }}
+                                    drag="y"
+                                    dragConstraints={{ top: 0, bottom: 0 }}
+                                    dragElastic={{ top: 0, bottom: 0.5 }}
+                                    onDragEnd={(_, info) => {
+                                        if (info.offset.y > 120 || info.velocity.y > 500) {
+                                            SoundEngine.playClick();
+                                            setSelectedItem(null);
+                                        }
+                                    }}
                                     className="relative w-full max-w-2xl bg-cream rounded-t-[2.5rem] overflow-hidden shadow-[0_-20px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[90vh]"
                                 >
-                                    <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-4 mb-2 shrink-0"></div>
+                                    <div className="w-full pt-3 pb-2 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0">
+                                        <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+                                    </div>
                                     
                                     <div className="overflow-y-auto no-scrollbar p-6 pt-2 pb-10">
                                         <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden mb-6 shadow-md shrink-0 bg-gray-200">
