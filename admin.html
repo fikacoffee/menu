@@ -52,26 +52,35 @@
 
         const fetchMenuFromGithub = async () => {
             const { username, repo, token } = getGithubCredentials();
-            if (!username || !repo) return null;
+            if (!username || !repo) return { error: 'Github bilgileri eksik. Ayarları kontrol edin.' };
 
+            let apiErrorMsg = '';
             try {
                 const url = `https://api.github.com/repos/${username}/${repo}/contents/data.json`;
                 const headers = token ? { 'Authorization': `token ${token}` } : {};
                 const res = await fetch(url + '?t=' + new Date().getTime(), { headers });
-                
-                if (!res.ok) throw new Error('API Error');
-                
+
+                if (!res.ok) {
+                    if (res.status === 401) apiErrorMsg = 'Github Token geçersiz veya süresi dolmuş (401). Yeni bir token oluşturup Ayarlar > Bağlantı kısmından güncelleyin.';
+                    else if (res.status === 404) apiErrorMsg = `Repo veya dosya bulunamadı (404). "${username}/${repo}" doğru mu, data.json mevcut mu?`;
+                    else if (res.status === 403) apiErrorMsg = 'Erişim reddedildi (403). Token yetkisi yetersiz olabilir.';
+                    else apiErrorMsg = `Github API hatası: ${res.status}`;
+                    throw new Error(apiErrorMsg);
+                }
+
                 const data = await res.json();
+                if (!data.content) throw new Error('data.json içeriği boş döndü.');
                 const content = decodeURIComponent(escape(atob(data.content)));
                 return { menuData: JSON.parse(content), sha: data.sha };
             } catch (err) {
-                console.error(err);
+                console.error('GitHub API fetch failed:', err);
                 try {
-                    const fallbackRes = await fetch('../data.json?t=' + new Date().getTime());
+                    const fallbackRes = await fetch('data.json?t=' + new Date().getTime(), { cache: 'no-store' });
+                    if (!fallbackRes.ok) throw new Error('Yerel data.json bulunamadı');
                     const fallbackData = await fallbackRes.json();
-                    return { menuData: fallbackData, sha: null };
+                    return { menuData: fallbackData, sha: null, warning: apiErrorMsg || err.message };
                 } catch (fallbackErr) {
-                    return null;
+                    return { error: apiErrorMsg || err.message || 'Veri yüklenemedi.' };
                 }
             }
         };
@@ -137,6 +146,7 @@
             const [menuData, setMenuData] = useState(null);
             const [fileSha, setFileSha] = useState(null);
             const [isLoading, setIsLoading] = useState(false);
+            const [loadError, setLoadError] = useState(null);
             
             const [activeView, setActiveView] = useState('products'); // products, daily, slot, settings
             
@@ -152,8 +162,17 @@
 
             const loadData = async () => {
                 setIsLoading(true);
+                setLoadError(null);
                 const result = await fetchMenuFromGithub();
-                if (result) {
+                if (result && result.error) {
+                    setLoadError(result.error);
+                    setIsLoading(false);
+                    return;
+                }
+                if (result && result.warning) {
+                    setLoadError('Uyarı (salt-okunur mod): ' + result.warning);
+                }
+                if (result && result.menuData) {
                     if (!result.menuData._Config) {
                         result.menuData._Config = { dailySuggestion: {}, slotConfig: [] };
                     }
@@ -187,7 +206,28 @@
             }
 
             if (!menuData) {
-                return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6">
+                        {loadError ? (
+                            <div className="max-w-md bg-white rounded-2xl shadow-lg border border-red-200 p-6 text-center">
+                                <div className="w-14 h-14 mx-auto mb-4 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                                    <i data-lucide="alert-triangle" className="w-7 h-7"></i>
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-800 mb-2">Veri Yüklenemedi</h2>
+                                <p className="text-sm text-gray-600 mb-5">{loadError}</p>
+                                <div className="flex gap-2">
+                                    <button onClick={loadData} className="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-orange-600 transition-colors">Yeniden Dene</button>
+                                    <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors">Çıkış Yap</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <p className="text-gray-600">Yükleniyor...</p>
+                            </div>
+                        )}
+                    </div>
+                );
             }
 
             return (
