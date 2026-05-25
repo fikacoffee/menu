@@ -99,12 +99,14 @@
     {
       "name": "Americano",
       "price": "140₺",
-      "img": "https://images.unsplash.com/photo-1551030173-122aabc4489c?auto=format&fit=crop&q=80&w=800",
       "desc": "İmza espresso çekirdeklerimizin sıcak su ile dengelenmiş ferah içimi.",
+      "img": "images/americano-1779717773254-square.jpg",
+      "imgWide": "images/americano-1779717773254-wide.jpg",
       "tags": [
         "Sütsüz",
         "Sert"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Filtre Kahve",
