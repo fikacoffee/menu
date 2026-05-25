@@ -775,12 +775,14 @@
     {
       "name": "Frambuaz Cheesecake",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&q=80&w=800",
       "desc": "Taze frambuaz sosu ile hazırlanan klasik New York usulü cheesecake.",
+      "img": "images/frambuaz-cheesecake-1779723041540-square.jpg",
+      "imgWide": "images/frambuaz-cheesecake-1779723041540-wide.jpg",
       "tags": [
         "Ekşi-Tatlı",
         "Klasik"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Sufle",
