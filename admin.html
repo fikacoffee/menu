@@ -1085,12 +1085,69 @@
         };
 
         const LoginScreen = ({ onLogin }) => {
-            const handleSubmit = (e) => {
+            const [isChecking, setIsChecking] = useState(false);
+            const [errorMsg, setErrorMsg] = useState('');
+
+            const handleSubmit = async (e) => {
                 e.preventDefault();
-                localStorage.setItem('github_username', e.target.username.value.trim());
-                localStorage.setItem('github_repo', e.target.repo.value.trim());
-                localStorage.setItem('github_token', e.target.token.value.trim());
-                onLogin();
+                const username = e.target.username.value.trim();
+                const repo = e.target.repo.value.trim();
+                const token = e.target.token.value.trim();
+
+                if (!username || !repo || !token) {
+                    setErrorMsg('Tüm alanları doldurun.');
+                    return;
+                }
+
+                setIsChecking(true);
+                setErrorMsg('');
+
+                try {
+                    // 1) Token geçerli mi?
+                    const userRes = await fetch('https://api.github.com/user', {
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if (userRes.status === 401) {
+                        setErrorMsg('Token geçersiz veya süresi dolmuş. GitHub > Settings > Developer settings > Personal access tokens kısmından yeni bir token oluşturun ("repo" yetkisi olmalı).');
+                        setIsChecking(false);
+                        return;
+                    }
+                    if (!userRes.ok) {
+                        setErrorMsg(`Token doğrulanamadı (HTTP ${userRes.status}). İnternet bağlantınızı veya token'ı kontrol edin.`);
+                        setIsChecking(false);
+                        return;
+                    }
+
+                    // 2) Repo erişimi ve data.json var mı?
+                    const repoRes = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/data.json`, {
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if (repoRes.status === 404) {
+                        setErrorMsg(`Repo veya data.json bulunamadı. "${username}/${repo}" doğru mu? Repo private ise token'ın bu repoya erişim yetkisi olmalı.`);
+                        setIsChecking(false);
+                        return;
+                    }
+                    if (repoRes.status === 403) {
+                        setErrorMsg('Erişim reddedildi (403). Token "repo" yetkisine sahip olmalı.');
+                        setIsChecking(false);
+                        return;
+                    }
+                    if (!repoRes.ok) {
+                        setErrorMsg(`Repo kontrolü başarısız (HTTP ${repoRes.status}).`);
+                        setIsChecking(false);
+                        return;
+                    }
+
+                    // Her şey tamam — kaydet ve giriş yap
+                    localStorage.setItem('github_username', username);
+                    localStorage.setItem('github_repo', repo);
+                    localStorage.setItem('github_token', token);
+                    onLogin();
+                } catch (err) {
+                    console.error(err);
+                    setErrorMsg('Bağlantı hatası: ' + err.message);
+                    setIsChecking(false);
+                }
             };
 
             return (
@@ -1103,22 +1160,34 @@
                             <h1 className="text-3xl font-bold text-gray-800">Admin Girişi</h1>
                             <p className="text-gray-500 text-sm mt-2">Github API bilgilerinizi girerek menünüzü yönetmeye başlayın.</p>
                         </div>
-                        
+
+                        {errorMsg && (
+                            <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2">
+                                <i data-lucide="alert-circle" className="w-4 h-4 mt-0.5 shrink-0"></i>
+                                <span>{errorMsg}</span>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Github Kullanıcı Adı</label>
-                                <input name="username" required placeholder="Örn: ahmet123" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                                <input name="username" required placeholder="Örn: ahmet123" disabled={isChecking} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none disabled:opacity-50" />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Github Repo Adı</label>
-                                <input name="repo" required placeholder="Örn: qr-menu" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                                <input name="repo" required placeholder="Örn: qr-menu" disabled={isChecking} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none disabled:opacity-50" />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Personal Access Token</label>
-                                <input name="token" required type="password" placeholder="ghp_..." className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none" />
+                                <input name="token" required type="password" placeholder="ghp_..." disabled={isChecking} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none disabled:opacity-50" />
                             </div>
-                            <button type="submit" className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition-colors shadow-lg mt-4">
-                                Giriş Yap
+                            <button type="submit" disabled={isChecking} className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition-colors shadow-lg mt-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                {isChecking ? (
+                                    <>
+                                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        Doğrulanıyor...
+                                    </>
+                                ) : 'Giriş Yap'}
                             </button>
                         </form>
                     </div>
