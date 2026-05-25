@@ -379,12 +379,14 @@
     {
       "name": "Kinder Espresso",
       "price": "140₺",
-      "img": "https://images.unsplash.com/photo-1594957502422-7729226d7501?auto=format&fit=crop&q=80&w=800",
       "desc": "Kinder çikolata bazlı, yoğun ve tatlı özel espresso shot.",
+      "img": "images/kinder-espresso-1779721054380-square.jpg",
+      "imgWide": "images/kinder-espresso-1779721054380-wide.jpg",
       "tags": [
         "Tatlı",
         "Shot"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Matcha Latte",
