@@ -403,12 +403,14 @@
     {
       "name": "V60",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=800",
       "desc": "Özel filtreleme yöntemiyle demlenen berrak ve aromatik 3. nesil kahve.",
+      "img": "images/v60-1779721110533-square.jpg",
+      "imgWide": "images/v60-1779721110533-wide.jpg",
       "tags": [
         "3. Nesil",
         "Sütsüz"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Chemex",
