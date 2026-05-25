@@ -705,12 +705,14 @@
     {
       "name": "Siyah Çay",
       "price": "45₺",
-      "img": "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?auto=format&fit=crop&q=80&w=800",
       "desc": "İnce belli bardakta sunulan, taze demlenmiş geleneksel Türk çayı.",
+      "img": "images/siyah-cay-1779722614741-square.jpg",
+      "imgWide": "images/siyah-cay-1779722614741-wide.jpg",
       "tags": [
         "Geleneksel",
         "Klasik"
-      ]
+      ],
+      "isActive": true
     }
   ],
   "Pastalar": [
