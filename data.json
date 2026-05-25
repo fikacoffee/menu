@@ -51,12 +51,14 @@
     {
       "name": "Toffee Nut Latte",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1557006021-b85faa2ca254?auto=format&fit=crop&q=80&w=800",
       "desc": "Kavrulmuş fındık ve karamel notalarıyla zenginleştirilmiş latte deneyimi.",
+      "img": "images/toffee-nut-latte-1779717703379-square.jpg",
+      "imgWide": "images/toffee-nut-latte-1779717703379-wide.jpg",
       "tags": [
         "Fındıklı",
         "Aromalı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Cappuccino",
