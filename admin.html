@@ -243,6 +243,8 @@
             const [isEditingCategory, setIsEditingCategory] = useState(false);
             const [cropImageSrc, setCropImageSrc] = useState(null);
             const [liveCropData, setLiveCropData] = useState(null);
+            const [cropStep, setCropStep] = useState('square'); // 'square' | 'wide'
+            const [tempSquareImg, setTempSquareImg] = useState(null);
             const cropperInstance = useRef(null);
 
             useEffect(() => {
@@ -266,6 +268,7 @@
                 
                 let imgData = form.imgPreview.value || form.imgUrl.value;
                 if (!imgData) { alert("Lütfen bir görsel ekleyin"); return; }
+                let imgWideData = form.imgWidePreview.value || (form.imgUrl.value || imgData);
 
                 const targetCat = form.category.value;
 
@@ -274,6 +277,7 @@
                     price: form.price.value.replace('₺', '') + '₺',
                     desc: form.desc.value,
                     img: imgData,
+                    imgWide: imgWideData,
                     tags: form.tags.value.split(',').map(t => t.trim()).filter(t => t),
                     isActive: form.isActive.checked
                 };
@@ -354,13 +358,22 @@
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (ev) => {
+                    setCropStep('square');
+                    setTempSquareImg(null);
                     setCropImageSrc(ev.target.result);
                 };
                 reader.readAsDataURL(file);
                 e.target.value = '';
             };
 
-            const handleSaveCrop = () => {
+            const destroyCropper = () => {
+                if(cropperInstance.current) {
+                    cropperInstance.current.destroy();
+                    cropperInstance.current = null;
+                }
+            };
+
+            const handleNextCrop = () => {
                 if(!cropperInstance.current) return;
                 const canvas = cropperInstance.current.getCroppedCanvas({
                     maxWidth: 800,
@@ -369,12 +382,45 @@
                     imageSmoothingEnabled: true,
                     imageSmoothingQuality: 'high',
                 });
-                const compressedData = canvas.toDataURL('image/jpeg', 0.8);
+                setTempSquareImg(canvas.toDataURL('image/jpeg', 0.85));
+                destroyCropper();
+                setLiveCropData(null);
+                setCropStep('wide');
+            };
+
+            const handleBackToSquare = () => {
+                destroyCropper();
+                setLiveCropData(null);
+                setCropStep('square');
+            };
+
+            const handleFinalCrop = () => {
+                if(!cropperInstance.current || !tempSquareImg) return;
+                const canvas = cropperInstance.current.getCroppedCanvas({
+                    maxWidth: 1280,
+                    maxHeight: 720,
+                    fillColor: '#fff',
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                const wideData = canvas.toDataURL('image/jpeg', 0.85);
                 setIsEditingItem(prev => ({
                     ...prev,
-                    item: { ...prev.item, img: compressedData }
+                    item: { ...prev.item, img: tempSquareImg, imgWide: wideData }
                 }));
+                destroyCropper();
                 setCropImageSrc(null);
+                setTempSquareImg(null);
+                setLiveCropData(null);
+                setCropStep('square');
+            };
+
+            const handleCancelCrop = () => {
+                destroyCropper();
+                setCropImageSrc(null);
+                setTempSquareImg(null);
+                setLiveCropData(null);
+                setCropStep('square');
             };
 
             if (isEditingItem) {
@@ -385,25 +431,38 @@
                             <div className="fixed inset-0 z-[200] bg-black/90 p-4 overflow-y-auto flex flex-col items-center justify-start md:justify-center">
                                 <div className="bg-white rounded-2xl w-full max-w-4xl p-6 flex flex-col md:flex-row gap-6 shadow-2xl my-auto">
                                     <div className="flex-1 flex flex-col gap-4">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <span className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold ${cropStep === 'square' ? 'bg-primary text-white' : 'bg-green-100 text-green-700'}`}>
+                                                <span className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center text-xs">{cropStep === 'square' ? '1' : '✓'}</span>
+                                                Adım 1: Kare (Menü)
+                                            </span>
+                                            <div className="flex-1 h-0.5 bg-gray-200"></div>
+                                            <span className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold ${cropStep === 'wide' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                <span className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center text-xs">2</span>
+                                                Adım 2: Geniş (Detay)
+                                            </span>
+                                        </div>
                                         <div className="flex-1 min-h-[250px] md:min-h-[400px] bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center relative">
-                                            <img 
-                                                src={cropImageSrc} 
-                                                style={{maxWidth: '100%', maxHeight: '500px'}} 
+                                            <img
+                                                key={cropStep}
+                                                src={cropImageSrc}
+                                                style={{maxWidth: '100%', maxHeight: '500px'}}
                                                 onLoad={(e) => {
                                                 if(cropperInstance.current) cropperInstance.current.destroy();
+                                                const isSquare = cropStep === 'square';
                                                 cropperInstance.current = new window.Cropper(e.target, {
-                                                    aspectRatio: 2/1,
+                                                    aspectRatio: isSquare ? 1 : 16/9,
                                                     viewMode: 1,
                                                     dragMode: 'move',
                                                     zoomable: true,
                                                     toggleDragModeOnDblclick: false,
                                                     autoCropArea: 1,
                                                     crop: () => {
-                                                        const canvas = cropperInstance.current.getCroppedCanvas({ width: 400, height: 200 });
-                                                        if(canvas) setLiveCropData(canvas.toDataURL('image/jpeg', 0.5));
+                                                        const c = cropperInstance.current.getCroppedCanvas(isSquare ? { width: 300, height: 300 } : { width: 400, height: 225 });
+                                                        if(c) setLiveCropData(c.toDataURL('image/jpeg', 0.5));
                                                     }
                                                 });
-                                            }} 
+                                            }}
                                             />
                                         </div>
                                         <div className="flex justify-center gap-3">
@@ -414,22 +473,50 @@
                                         </div>
                                     </div>
                                     <div className="w-full md:w-64 flex flex-col gap-4 shrink-0">
-                                        <h3 className="font-bold text-gray-800 border-b pb-2">Canlı Önizlemeler</h3>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-2 font-semibold">Menü Görünümü (Kare)</p>
-                                            <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
-                                                <img src={liveCropData} className="w-full h-full object-cover" />
+                                        <h3 className="font-bold text-gray-800 border-b pb-2">
+                                            {cropStep === 'square' ? 'Menü Kart Önizlemesi' : 'Detay Görsel Önizlemesi'}
+                                        </h3>
+                                        {cropStep === 'square' ? (
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-2 font-semibold">Menü Listesi (1:1)</p>
+                                                <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200">
+                                                    <img src={liveCropData} className="w-full h-full object-cover" />
+                                                </div>
+                                                <p className="text-[11px] text-gray-400 mt-3 leading-snug">Bu, menü listesinde görünecek küçük kare görsel. İleri'ye basıp detay sayfası için geniş kırpmaya geçebilirsin.</p>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 mb-2 font-semibold">Detay Görünümü (Geniş)</p>
-                                            <div className="w-full aspect-[2/1] rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200 relative">
-                                                <img src={liveCropData} className="w-full h-full object-cover" />
-                                            </div>
-                                        </div>
-                                        <div className="mt-auto pt-4 flex gap-2">
-                                            <button type="button" onClick={() => setCropImageSrc(null)} className="w-1/2 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors">İptal</button>
-                                            <button type="button" onClick={handleSaveCrop} className="w-1/2 py-3 rounded-xl bg-primary text-white font-bold hover:bg-orange-600 transition-colors shadow-md">Kırp</button>
+                                        ) : (
+                                            <>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 mb-2 font-semibold">Detay Sayfası (16:9)</p>
+                                                    <div className="w-full aspect-video rounded-lg overflow-hidden bg-gray-100 shadow-sm border border-gray-200 relative">
+                                                        <img src={liveCropData} className="w-full h-full object-cover" />
+                                                    </div>
+                                                </div>
+                                                {tempSquareImg && (
+                                                    <div>
+                                                        <p className="text-xs text-gray-500 mb-2 font-semibold">Kaydedilen Kare</p>
+                                                        <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 shadow-sm border-2 border-green-300">
+                                                            <img src={tempSquareImg} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                        <div className="mt-auto pt-4 flex flex-col gap-2">
+                                            {cropStep === 'square' ? (
+                                                <div className="flex gap-2">
+                                                    <button type="button" onClick={handleCancelCrop} className="w-1/2 py-3 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-colors">İptal</button>
+                                                    <button type="button" onClick={handleNextCrop} className="w-1/2 py-3 rounded-xl bg-primary text-white font-bold hover:bg-orange-600 transition-colors shadow-md flex items-center justify-center gap-1">İleri <i data-lucide="arrow-right" className="w-4 h-4"></i></button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button type="button" onClick={handleFinalCrop} className="w-full py-3 rounded-xl bg-primary text-white font-bold hover:bg-orange-600 transition-colors shadow-md">Kaydet</button>
+                                                    <div className="flex gap-2">
+                                                        <button type="button" onClick={handleBackToSquare} className="w-1/2 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors text-sm flex items-center justify-center gap-1"><i data-lucide="arrow-left" className="w-4 h-4"></i> Geri</button>
+                                                        <button type="button" onClick={handleCancelCrop} className="w-1/2 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors text-sm">İptal</button>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -472,7 +559,8 @@
                                     <div className="flex-1 space-y-2">
                                         <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
                                         <input name="imgPreview" type="hidden" value={item.img || ''} readOnly />
-                                        <input name="imgUrl" type="url" placeholder="Veya internetten resim URL'si yapıştır" defaultValue={item.img?.startsWith('http') ? item.img : ''} onChange={(e) => { setIsEditingItem(prev => ({...prev, item: {...prev.item, img: e.target.value}})); }} className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none" />
+                                        <input name="imgWidePreview" type="hidden" value={item.imgWide || ''} readOnly />
+                                        <input name="imgUrl" type="url" placeholder="Veya internetten resim URL'si yapıştır" defaultValue={item.img?.startsWith('http') ? item.img : ''} onChange={(e) => { setIsEditingItem(prev => ({...prev, item: {...prev.item, img: e.target.value, imgWide: e.target.value}})); }} className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary outline-none" />
                                     </div>
                                 </div>
                             </div>
@@ -656,12 +744,21 @@
             const [drink, setDrink] = useState(config.drinkName || '');
             const [food, setFood] = useState(config.foodName || '');
             const [discount, setDiscount] = useState(config.discountAmount || 0);
+            const [isActive, setIsActive] = useState(config.isActive !== false);
 
             const handleSave = (e) => {
                 e.preventDefault();
                 const newData = { ...menuData };
                 if(!newData._Config) newData._Config = {};
-                newData._Config.dailySuggestion = { drinkName: drink, foodName: food, discountAmount: discount };
+                newData._Config.dailySuggestion = { drinkName: drink, foodName: food, discountAmount: discount, isActive };
+                onSave(newData);
+            };
+
+            const handleToggleActive = async (val) => {
+                setIsActive(val);
+                const newData = { ...menuData };
+                if(!newData._Config) newData._Config = {};
+                newData._Config.dailySuggestion = { ...config, drinkName: drink, foodName: food, discountAmount: discount, isActive: val };
                 onSave(newData);
             };
 
@@ -676,13 +773,30 @@
                         <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center shrink-0">
                             <i data-lucide="sparkles" className="w-6 h-6"></i>
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <h2 className="text-2xl font-bold">Günün İkilisi</h2>
                             <p className="text-sm text-gray-500">Müşterilerinize önereceğiniz özel ikili menüyü ayarlayın.</p>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSave} className="space-y-6">
+                    <div className={`mb-6 p-4 rounded-xl border-2 transition-colors ${isActive ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1">
+                                <div className="font-bold text-gray-800 flex items-center gap-2">
+                                    <i data-lucide={isActive ? 'eye' : 'eye-off'} className={`w-4 h-4 ${isActive ? 'text-green-600' : 'text-gray-400'}`}></i>
+                                    {isActive ? 'Menüde Gösteriliyor' : 'Menüde Gizli'}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {isActive
+                                        ? 'Günün İkilisi butonu ana sayfada müşterilere görünür.'
+                                        : 'Günün İkilisi butonu ana sayfada gizlenir; ayarlar saklanır.'}
+                                </p>
+                            </div>
+                            <Toggle label="" checked={isActive} onChange={handleToggleActive} />
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSave} className={`space-y-6 ${!isActive ? 'opacity-60' : ''}`}>
                         <div className="grid md:grid-cols-2 gap-6 relative z-20">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-2">Günün İçeceği</label>

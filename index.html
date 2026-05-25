@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FIKA COFFEE | The Experience</title>
+    <title>Fika Coffee</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -218,7 +218,8 @@
             const dailySuggestion = useMemo(() => {
                 if (!menuData || !menuData._Config || !menuData._Config.dailySuggestion) return null;
                 const config = menuData._Config.dailySuggestion;
-                
+                if (config.isActive === false) return null;
+
                 let drink = null;
                 let food = null;
                 
@@ -381,15 +382,17 @@
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 w-full max-w-sm sm:max-w-none px-4">
-                                    <motion.button
-                                        initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 1 }}
-                                        onClick={() => { SoundEngine.playClick(); setIsDailyModalOpen(true); }}
-                                        className="w-full sm:w-auto relative px-6 py-3 rounded-full flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500/30 to-orange-400/30 backdrop-blur-md border border-yellow-300 hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.4)] group overflow-hidden"
-                                    >
-                                        <div className="absolute inset-0 btn-shine opacity-50 pointer-events-none"></div>
-                                        <i data-lucide="sparkles" className="text-yellow-300 w-5 h-5 fill-yellow-300/30 animate-pulse relative z-10"></i>
-                                        <span className="font-body text-xs sm:text-sm uppercase tracking-[0.15em] text-white font-extrabold relative z-10 drop-shadow-md">Günün İkilisi</span>
-                                    </motion.button>
+                                    {dailySuggestion && (
+                                        <motion.button
+                                            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 1 }}
+                                            onClick={() => { SoundEngine.playClick(); setIsDailyModalOpen(true); }}
+                                            className="w-full sm:w-auto relative px-6 py-3 rounded-full flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-500/30 to-orange-400/30 backdrop-blur-md border border-yellow-300 hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.4)] group overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 btn-shine opacity-50 pointer-events-none"></div>
+                                            <i data-lucide="sparkles" className="text-yellow-300 w-5 h-5 fill-yellow-300/30 animate-pulse relative z-10"></i>
+                                            <span className="font-body text-xs sm:text-sm uppercase tracking-[0.15em] text-white font-extrabold relative z-10 drop-shadow-md">Günün İkilisi</span>
+                                        </motion.button>
+                                    )}
 
                                     <motion.button
                                         initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4, duration: 1 }}
@@ -534,11 +537,11 @@
                                             <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent transform -translate-x-full ${slotState === 'spinning' ? 'animate-[shimmer_0.5s_infinite]' : ''}`}></div>
                                             
                                             <h2 className="relative z-10 font-heading italic text-3xl sm:text-4xl font-bold text-white drop-shadow-md uppercase tracking-wider">
-                                                GÜNÜN ŞANSI
+                                                KARARSIZ MISIN?
                                             </h2>
                                             <div className="flex items-center justify-center gap-2 mt-1 relative z-10">
                                                 <span className="w-8 h-[2px] bg-gradient-to-r from-transparent to-white/70"></span>
-                                                <span className="font-body text-[9px] text-white/90 uppercase tracking-[0.4em] font-bold">SÜRPRİZ SEÇİM</span>
+                                                <span className="font-body text-[9px] text-white/90 uppercase tracking-[0.4em] font-bold">SENİN İÇİN SEÇELİM</span>
                                                 <span className="w-8 h-[2px] bg-gradient-to-l from-transparent to-white/70"></span>
                                             </div>
                                         </div>
@@ -772,8 +775,8 @@
                                     <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-4 mb-2 shrink-0"></div>
                                     
                                     <div className="overflow-y-auto no-scrollbar p-6 pt-2 pb-10">
-                                        <div className="relative h-64 md:h-80 w-full rounded-[2rem] overflow-hidden mb-6 shadow-md shrink-0 bg-gray-200">
-                                            <img src={selectedItem.img} onError={handleImageError} className="w-full h-full object-cover" alt={selectedItem.name} />
+                                        <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden mb-6 shadow-md shrink-0 bg-gray-200">
+                                            <img src={selectedItem.imgWide || selectedItem.img} onError={handleImageError} className="w-full h-full object-cover" alt={selectedItem.name} />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
                                         </div>
 
