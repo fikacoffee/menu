@@ -3,12 +3,14 @@
     {
       "name": "Latte",
       "price": "120₺",
-      "img": "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&q=80&w=800",
       "desc": "Özenle çekilmiş taze espresso ve ipeksi sıcak süt köpüğünün yumuşak buluşması.",
+      "img": "images/latte-1779717018296-square.jpg",
+      "imgWide": "images/latte-1779717018296-wide.jpg",
       "tags": [
         "Sütlü",
         "Yumuşak İçim"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Mocha",
@@ -776,10 +778,42 @@
       "discountPercent": 15
     },
     "slotConfig": [
-      { "id": "sicak", "label": "Sıcak", "icon": "coffee", "class": "coin-bronze", "targetCategories": ["Sıcak Kahveler", "Bitki Çayları"] },
-      { "id": "soguk", "label": "Soğuk", "icon": "snowflake", "class": "coin-silver", "targetCategories": ["Soğuk Kahveler", "Soğuk Special"] },
-      { "id": "tatli", "label": "Tatlı", "icon": "cake-slice", "class": "coin-rose", "targetCategories": ["Pastalar"] },
-      { "id": "all", "label": "Sürpriz", "icon": "dices", "class": "coin-gold", "targetCategories": [] }
+      {
+        "id": "sicak",
+        "label": "Sıcak",
+        "icon": "coffee",
+        "class": "coin-bronze",
+        "targetCategories": [
+          "Sıcak Kahveler",
+          "Bitki Çayları"
+        ]
+      },
+      {
+        "id": "soguk",
+        "label": "Soğuk",
+        "icon": "snowflake",
+        "class": "coin-silver",
+        "targetCategories": [
+          "Soğuk Kahveler",
+          "Soğuk Special"
+        ]
+      },
+      {
+        "id": "tatli",
+        "label": "Tatlı",
+        "icon": "cake-slice",
+        "class": "coin-rose",
+        "targetCategories": [
+          "Pastalar"
+        ]
+      },
+      {
+        "id": "all",
+        "label": "Sürpriz",
+        "icon": "dices",
+        "class": "coin-gold",
+        "targetCategories": []
+      }
     ]
   }
 }
