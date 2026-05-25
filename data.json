@@ -751,12 +751,14 @@
     {
       "name": "Lotus Cake",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1582716401301-b2407dc7563d?auto=format&fit=crop&q=80&w=800",
       "desc": "Karamelize bisküvi tabanı ve Lotus kremasıyla kaplanmış şaheser.",
+      "img": "images/lotus-cake-1779722993318-square.jpg",
+      "imgWide": "images/lotus-cake-1779722993318-wide.jpg",
       "tags": [
         "Popüler",
         "Bisküvili"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Fıstık Rüyası",
