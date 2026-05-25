@@ -787,12 +787,14 @@
     {
       "name": "Sufle",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&q=80&w=800",
       "desc": "İçi akışkan sıcak çikolatalı, isteğe bağlı dondurma ile servis edilen sufle.",
+      "img": "images/sufle-1779723121254-square.jpg",
+      "imgWide": "images/sufle-1779723121254-wide.jpg",
       "tags": [
         "Sıcak Tatlı",
         "Çikolatalı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "BlueBerry Cake",
