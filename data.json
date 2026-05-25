@@ -233,12 +233,14 @@
     {
       "name": "Ice Caramel Macchiato",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1499961024600-d0f16b25ca15?auto=format&fit=crop&q=80&w=800",
       "desc": "Karamel sos ve vanilyanın espresso ile buzlu uyumu.",
+      "img": "images/ice-caramel-macchiato-1779718101503-square.jpg",
+      "imgWide": "images/ice-caramel-macchiato-1779718101503-wide.jpg",
       "tags": [
         "Karamelli",
         "Ferah"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ice Toffee Nut",
