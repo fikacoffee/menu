@@ -343,12 +343,14 @@
     {
       "name": "ChocoBerry Latte",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1611078738320-eb416fc6a86c?auto=format&fit=crop&q=80&w=800",
       "desc": "Çilek ve çikolata notalarının sıradışı espresso uyumu.",
+      "img": "images/chocoberry-latte-1779720959513-square.jpg",
+      "imgWide": "images/chocoberry-latte-1779720959513-wide.jpg",
       "tags": [
         "Meyveli",
         "İmza"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Süt Reçelli Latte",
