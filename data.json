@@ -763,12 +763,14 @@
     {
       "name": "Fıstık Rüyası",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1614083049184-b04f7f6a70a8?auto=format&fit=crop&q=80&w=800",
       "desc": "Boz iç Antep fıstığı dolgulu ve çikolata kaplı özel pasta.",
+      "img": "images/fistik-ruyasi-1779723021120-square.jpg",
+      "imgWide": "images/fistik-ruyasi-1779723021120-wide.jpg",
       "tags": [
         "Fıstıklı",
         "Yoğun"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Frambuaz Cheesecake",
