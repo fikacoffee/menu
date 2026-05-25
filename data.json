@@ -245,12 +245,14 @@
     {
       "name": "Ice Toffee Nut",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&q=80&w=800",
       "desc": "Fındık ve karamel notalarının buzla birleştiği ferahlatıcı lezzet.",
+      "img": "images/ice-toffee-nut-1779718125247-square.jpg",
+      "imgWide": "images/ice-toffee-nut-1779718125247-wide.jpg",
       "tags": [
         "Soğuk",
         "Aromalı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ice Flat White",
