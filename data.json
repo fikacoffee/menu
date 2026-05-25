@@ -835,12 +835,14 @@
     {
       "name": "Roll Kruvasan",
       "price": "290₺",
-      "img": "https://images.unsplash.com/photo-1558401391-7899b4bd5bbf?auto=format&fit=crop&q=80&w=800",
       "desc": "New York trendi, yuvarlak formlu ve bol çikolata dolgulu kruvasan.",
+      "img": "images/roll-kruvasan-1779723221608-square.jpg",
+      "imgWide": "images/roll-kruvasan-1779723221608-wide.jpg",
       "tags": [
         "Trend",
         "Çıtır"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Cocostar",
