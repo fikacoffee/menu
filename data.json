@@ -197,12 +197,14 @@
     {
       "name": "Ice Latte",
       "price": "140₺",
-      "img": "https://images.unsplash.com/photo-1461023058943-07fc0e641775?auto=format&fit=crop&q=80&w=800",
       "desc": "Buzlu sütün taze çekilmiş espresso ile ferahlatıcı buluşması.",
+      "img": "images/ice-latte-1779718021275-square.jpg",
+      "imgWide": "images/ice-latte-1779718021275-wide.jpg",
       "tags": [
         "Soğuk",
         "Sütlü"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ice Mocha",
