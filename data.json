@@ -908,11 +908,13 @@
     {
       "name": "Premium Soda",
       "price": "65₺",
-      "img": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=800",
       "desc": "Cam şişede doğal maden suyu.",
+      "img": "images/premium-soda-1779726517598-square.jpg",
+      "imgWide": "images/premium-soda-1779726517598-wide.jpg",
       "tags": [
         "Mineralli"
-      ]
+      ],
+      "isActive": true
     }
   ],
   "_Config": {
