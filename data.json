@@ -27,12 +27,14 @@
     {
       "name": "White Choc. Mocha",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&q=80&w=800",
       "desc": "Beyaz çikolata tutkunları için espresso ve sütün özel reçetesi.",
+      "img": "images/white-choc-mocha-1779717663279-square.jpg",
+      "imgWide": "images/white-choc-mocha-1779717663279-wide.jpg",
       "tags": [
         "Beyaz Çikolatalı",
         "Tatlı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Caramel Macchiato",
