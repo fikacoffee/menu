@@ -823,12 +823,14 @@
     {
       "name": "Küp Kruvasan",
       "price": "290₺",
-      "img": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=800",
       "desc": "Bol tereyağlı, kat kat hamuruyla içi özel krema dolgulu küp kruvasan.",
+      "img": "images/kup-kruvasan-1779723200226-square.jpg",
+      "imgWide": "images/kup-kruvasan-1779723200226-wide.jpg",
       "tags": [
         "Çıtır",
         "Kremalı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Roll Kruvasan",
