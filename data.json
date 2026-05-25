@@ -799,12 +799,14 @@
     {
       "name": "BlueBerry Cake",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&q=80&w=800",
       "desc": "Taze yaban mersini parçacıkları içeren yumuşacık kek.",
+      "img": "images/blueberry-cake-1779723152352-square.jpg",
+      "imgWide": "images/blueberry-cake-1779723152352-wide.jpg",
       "tags": [
         "Meyveli",
         "Yumuşak"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Tiramisu",
