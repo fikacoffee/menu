@@ -847,7 +847,7 @@
       "foodName": "White Choc. Mocha",
       "discountPercent": 15,
       "discountAmount": 0,
-      "isActive": true
+      "isActive": false
     },
     "slotConfig": [
       {
