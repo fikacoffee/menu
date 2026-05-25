@@ -269,12 +269,14 @@
     {
       "name": "Ice Americano",
       "price": "150₺",
-      "img": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800",
       "desc": "Su ve buz ile inceltilmiş, serinletici saf espresso deneyimi.",
+      "img": "images/ice-americano-1779718163437-square.jpg",
+      "imgWide": "images/ice-americano-1779718163437-wide.jpg",
       "tags": [
         "Sütsüz",
         "Ferah"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Frappuccino",
