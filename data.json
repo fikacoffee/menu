@@ -307,12 +307,14 @@
     {
       "name": "Nutella Mocha",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1596078841242-12f73dc697c6?auto=format&fit=crop&q=80&w=800",
       "desc": "Gerçek Nutella ile hazırlanan yoğun çikolatalı mocha.",
+      "img": "images/nutella-mocha-1779720879023-square.jpg",
+      "imgWide": "images/nutella-mocha-1779720879023-wide.jpg",
       "tags": [
         "Nutella",
         "Yoğun"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Pumpkin Spice",
