@@ -681,12 +681,14 @@
     {
       "name": "Yeşil Çay",
       "price": "120₺",
-      "img": "https://images.unsplash.com/photo-1627492221038-ceec8ce0e2a1?auto=format&fit=crop&q=80&w=800",
       "desc": "Yüksek antioksidan içeren, tazelik veren saf yeşil çay.",
+      "img": "images/yesil-cay-1779722535887-square.jpg",
+      "imgWide": "images/yesil-cay-1779722535887-wide.jpg",
       "tags": [
         "Detoks",
         "Doğal"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Hibiscus Çayı",
