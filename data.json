@@ -415,12 +415,14 @@
     {
       "name": "Chemex",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1507133750075-842270921475?auto=format&fit=crop&q=80&w=800",
       "desc": "Kalın kağıt filtre ile demlenen pürüzsüz ve yumuşak içimli filtre kahve.",
+      "img": "images/chemex-1779721134756-square.jpg",
+      "imgWide": "images/chemex-1779721134756-wide.jpg",
       "tags": [
         "Dengeli",
         "Berrak"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Cold Brew",
