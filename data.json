@@ -559,12 +559,14 @@
     {
       "name": "Black Berryz",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1555353148-52fb376371cb?auto=format&fit=crop&q=80&w=800",
       "desc": "Böğürtlenin yoğun tadını hissedeceğiniz buz gibi spesiyal.",
+      "img": "images/black-berryz-1779722044884-square.jpg",
+      "imgWide": "images/black-berryz-1779722044884-wide.jpg",
       "tags": [
         "Böğürtlen",
         "Yoğun"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ice Matcha Latte",
