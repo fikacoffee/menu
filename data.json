@@ -523,12 +523,14 @@
     {
       "name": "Cool Lime",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1513618827672-0d7c5ad591b1?auto=format&fit=crop&q=80&w=800",
       "desc": "Misket limonu ve taze nane özleriyle sarsıcı ferahlık.",
+      "img": "images/cool-lime-1779721968682-square.jpg",
+      "imgWide": "images/cool-lime-1779721968682-wide.jpg",
       "tags": [
         "Çok Ferah",
         "Kahvesiz"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Blues",
