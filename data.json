@@ -355,12 +355,14 @@
     {
       "name": "Süt Reçelli Latte",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1515589654160-b74c0b58e7ce?auto=format&fit=crop&q=80&w=800",
       "desc": "Karamelize süt reçeli ile hazırlanan, damakta iz bırakan lezzet.",
+      "img": "images/sut-recelli-latte-1779720995039-square.jpg",
+      "imgWide": "images/sut-recelli-latte-1779720995039-wide.jpg",
       "tags": [
         "Karamelize",
         "Yumuşak"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Cocostar Latte",
