@@ -391,12 +391,14 @@
     {
       "name": "Matcha Latte",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&q=80&w=800",
       "desc": "Premium Japon matcha çayı ve sıcak sütün antioksidan deposu hali.",
+      "img": "images/matcha-latte-1779721079969-square.jpg",
+      "imgWide": "images/matcha-latte-1779721079969-wide.jpg",
       "tags": [
         "Sağlıklı",
         "Yeşil Çay"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "V60",
