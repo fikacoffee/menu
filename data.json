@@ -820,10 +820,10 @@
   "_Config": {
     "dailySuggestion": {
       "drinkName": "Mocha",
-      "foodName": "Ada LOVE",
+      "foodName": "White Choc. Mocha",
       "discountPercent": 15,
       "discountAmount": 0,
-      "isActive": false
+      "isActive": true
     },
     "slotConfig": [
       {
