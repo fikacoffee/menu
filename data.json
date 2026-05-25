@@ -547,12 +547,14 @@
     {
       "name": "BerryLime",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1563223771-5fe4038fbfc9?auto=format&fit=crop&q=80&w=800",
       "desc": "Misket limonu ferahlığı ve kırmızı orman meyvelerinin mükemmel uyumu.",
+      "img": "images/berrylime-1779722019175-square.jpg",
+      "imgWide": "images/berrylime-1779722019175-wide.jpg",
       "tags": [
         "Ekşi",
         "Tatlı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Black Berryz",
