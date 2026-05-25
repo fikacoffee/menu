@@ -657,12 +657,14 @@
     {
       "name": "Ada Çayı",
       "price": "120₺",
-      "img": "https://images.unsplash.com/photo-1582793988951-9aed5509eb97?auto=format&fit=crop&q=80&w=800",
       "desc": "Doğal yaprak adaçayı, sakinleştirici ve dinlendirici.",
+      "img": "images/ada-cayi-1779722490011-square.jpg",
+      "imgWide": "images/ada-cayi-1779722490011-wide.jpg",
       "tags": [
         "Doğal",
         "Sakinleştirici"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Papatya Çayı",
