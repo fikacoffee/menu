@@ -15,12 +15,14 @@
     {
       "name": "Mocha",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1596078841242-12f73dc697c6?auto=format&fit=crop&q=80&w=800",
       "desc": "Espresso, sıcak süt ve premium çikolatanın tatlı uyumu.",
+      "img": "images/mocha-1779717641954-square.jpg",
+      "imgWide": "images/mocha-1779717641954-wide.jpg",
       "tags": [
         "Çikolatalı",
         "Tatlı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "White Choc. Mocha",
