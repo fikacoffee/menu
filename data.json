@@ -487,12 +487,14 @@
     {
       "name": "Ice Spanish Latte",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1516040854495-2070e6a147ce?auto=format&fit=crop&q=80&w=800",
       "desc": "Yoğunlaştırılmış süt ve espresso'nun kremamsı buzlu uyumu.",
+      "img": "images/ice-spanish-latte-1779721888084-square.jpg",
+      "imgWide": "images/ice-spanish-latte-1779721888084-wide.jpg",
       "tags": [
         "Kremamsı",
         "Tatlı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Berryz",
