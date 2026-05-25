@@ -739,12 +739,14 @@
     {
       "name": "Brownie Caramel",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800",
       "desc": "Altı brownie, üstü yoğun peynir kreması ve akışkan karamel sos.",
+      "img": "images/brownie-caramel-1779722970341-square.jpg",
+      "imgWide": "images/brownie-caramel-1779722970341-wide.jpg",
       "tags": [
         "Çok Tatlı",
         "Karamelli"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Lotus Cake",
