@@ -111,12 +111,14 @@
     {
       "name": "Filtre Kahve",
       "price": "140₺",
-      "img": "https://images.unsplash.com/photo-1498603536246-15572faa67a6?auto=format&fit=crop&q=80&w=800",
       "desc": "Günün yorgunluğunu alan, taze demlenmiş dengeli filtre kahve.",
+      "img": "images/filtre-kahve-1779717801086-square.jpg",
+      "imgWide": "images/filtre-kahve-1779717801086-wide.jpg",
       "tags": [
         "Sütsüz",
         "Dengeli"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Espresso",
