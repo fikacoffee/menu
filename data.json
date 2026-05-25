@@ -924,8 +924,7 @@
   "_Config": {
     "dailySuggestion": {
       "drinkName": "Mocha",
-      "foodName": "White Choc. Mocha",
-      "discountPercent": 15,
+      "foodName": "Fıstık Rüyası",
       "discountAmount": 0,
       "isActive": true
     },
