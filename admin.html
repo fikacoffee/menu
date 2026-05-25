@@ -66,8 +66,26 @@
                 if (!res.ok) return { error: `Github API hatası: ${res.status}` };
 
                 const data = await res.json();
-                if (!data.content) return { error: 'data.json içeriği boş döndü.' };
-                const content = decodeURIComponent(escape(atob(data.content)));
+                let content;
+
+                if (data.content) {
+                    // Küçük dosya (1 MB altı): base64 içerik direkt geliyor
+                    content = decodeURIComponent(escape(atob(data.content)));
+                } else if (data.download_url) {
+                    // Büyük dosya (1 MB üstü): GitHub content alanını boş bırakır, download_url'den çekmek lazım
+                    console.warn('data.json 1 MB üstü, download_url kullanılıyor');
+                    const dlRes = await fetch(data.download_url + '?t=' + new Date().getTime(), {
+                        headers: { 'Authorization': `token ${token}` },
+                        cache: 'no-store'
+                    });
+                    if (!dlRes.ok) return { error: `data.json indirilemedi (HTTP ${dlRes.status}).` };
+                    content = await dlRes.text();
+                } else if (data.size === 0) {
+                    return { error: 'data.json boş bir dosya. Yedekten yükleyin.' };
+                } else {
+                    return { error: 'data.json içeriği okunamadı (beklenmedik API yanıtı).' };
+                }
+
                 return { menuData: JSON.parse(content), sha: data.sha };
             } catch (err) {
                 console.error('GitHub API fetch failed:', err);
