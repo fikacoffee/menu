@@ -890,11 +890,13 @@
     {
       "name": "Espresso Shot",
       "price": "45₺",
-      "img": "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&q=80&w=800",
       "desc": "Kahvenizin sertliğini artırmak için ekstra bir shot taze espresso.",
+      "img": "images/espresso-shot-1779727006386-square.jpg",
+      "imgWide": "images/espresso-shot-1779727006386-wide.jpg",
       "tags": [
         "Sertlik Arttırıcı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Premium Su",
