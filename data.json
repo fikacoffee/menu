@@ -511,12 +511,14 @@
     {
       "name": "Orange Mango",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1546171753-97d7676e4602?auto=format&fit=crop&q=80&w=800",
       "desc": "Portakal ve mangonun tropikal ve ferah buzlu karışımı.",
+      "img": "images/orange-mango-1779721941625-square.jpg",
+      "imgWide": "images/orange-mango-1779721941625-wide.jpg",
       "tags": [
         "Tropikal",
         "Ferah"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Cool Lime",
