@@ -867,11 +867,13 @@
     {
       "name": "şurup",
       "price": "35₺",
-      "img": "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&q=80&w=800",
       "desc": "İçeceğinize ekstra lezzet katacak vanilya, karamel veya fındık şurubu.",
+      "img": "images/surup-1779726461299-square.jpg",
+      "imgWide": "images/surup-1779726461299-wide.jpg",
       "tags": [
         "Tatlandırıcı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Bitkisel Süt",
