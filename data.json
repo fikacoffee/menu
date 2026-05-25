@@ -535,12 +535,14 @@
     {
       "name": "Blues",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&q=80&w=800",
       "desc": "Yaban mersini ve özel şuruplarla hazırlanan masmavi bir serinlik.",
+      "img": "images/blues-1779721991801-square.jpg",
+      "imgWide": "images/blues-1779721991801-wide.jpg",
       "tags": [
         "Özel",
         "Meyveli"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "BerryLime",
