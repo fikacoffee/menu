@@ -209,12 +209,14 @@
     {
       "name": "Ice Mocha",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1504630083234-14187a9df0f5?auto=format&fit=crop&q=80&w=800",
       "desc": "Buz, soğuk süt, espresso ve çikolatanın tatlı serinliği.",
+      "img": "images/ice-mocha-1779718058365-square.jpg",
+      "imgWide": "images/ice-mocha-1779718058365-wide.jpg",
       "tags": [
         "Soğuk",
         "Çikolatalı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ice W.Choco Mocha",
