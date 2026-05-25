@@ -693,12 +693,14 @@
     {
       "name": "Hibiscus Çayı",
       "price": "120₺",
-      "img": "https://images.unsplash.com/photo-1622240506921-042a4e71c172?auto=format&fit=crop&q=80&w=800",
       "desc": "Mayhoş tadı ve yakut kırmızısı rengiyle ferahlatıcı ebegümeci.",
+      "img": "images/hibiscus-cayi-1779722586533-square.jpg",
+      "imgWide": "images/hibiscus-cayi-1779722586533-wide.jpg",
       "tags": [
         "Mayhoş",
         "C Vitamini"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Siyah Çay",
