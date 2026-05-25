@@ -295,12 +295,14 @@
     {
       "name": "Lotus Latte",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1620087799566-5f739665bc83?auto=format&fit=crop&q=80&w=800",
       "desc": "Karamelize Lotus bisküvi kreması ile hazırlanan imza kahvemiz.",
+      "img": "images/lotus-latte-1779720732727-square.jpg",
+      "imgWide": "images/lotus-latte-1779720732727-wide.jpg",
       "tags": [
         "İmza",
         "Tatlı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Nutella Mocha",
