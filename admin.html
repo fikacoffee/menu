@@ -186,6 +186,10 @@
             };
 
             const handleSaveData = async (newData) => {
+                if (!fileSha) {
+                    alert("Kaydedilemiyor: Salt-okunur moddasınız.\n\nGithub API'ye bağlanılamadığı için veri yerel dosyadan yüklendi. Bu nedenle değişiklikler GitHub'a yazılamaz.\n\nÇözüm: Ayarlar > Bağlantı kısmından Github Token'ınızı güncelleyin (büyük ihtimalle süresi dolmuş). Yeni token oluşturmak için: GitHub > Settings > Developer settings > Personal access tokens.");
+                    return false;
+                }
                 setIsLoading(true);
                 try {
                     const newSha = await saveMenuToGithub(newData, fileSha);
@@ -194,7 +198,13 @@
                     return true;
                 } catch (e) {
                     console.error("Save Error:", e);
-                    alert(`Kayıt başarısız oldu: ${e.message}\nGithub Token yetkinizi veya yüklediğiniz görselin çok büyük olmadığını kontrol edin.`);
+                    let msg = e.message || 'Bilinmeyen hata';
+                    if (msg.includes('401') || msg.toLowerCase().includes('bad credentials')) {
+                        msg = 'Github Token geçersiz veya süresi dolmuş. Ayarlar > Bağlantı kısmından güncelleyin.';
+                    } else if (msg.includes('409') || msg.toLowerCase().includes('sha')) {
+                        msg = 'Dosya başka bir yerden değiştirilmiş olabilir. Sayfayı yenileyip tekrar deneyin.';
+                    }
+                    alert(`Kayıt başarısız oldu: ${msg}`);
                     return false;
                 } finally {
                     setIsLoading(false);
