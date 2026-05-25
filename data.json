@@ -427,12 +427,14 @@
     {
       "name": "Cold Brew",
       "price": "180₺",
-      "img": "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&q=80&w=800",
       "desc": "16 saat soğuk suda demlenerek hazırlanan, buzlu kahve.",
+      "img": "images/cold-brew-1779721154141-square.jpg",
+      "imgWide": "images/cold-brew-1779721154141-wide.jpg",
       "tags": [
         "Yüksek Kafein",
         "Sert"
-      ]
+      ],
+      "isActive": true
     }
   ],
   "Soğuk Special": [
