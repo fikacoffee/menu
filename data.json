@@ -257,12 +257,14 @@
     {
       "name": "Ice Flat White",
       "price": "165₺",
-      "img": "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba9?auto=format&fit=crop&q=80&w=800",
       "desc": "Yoğun kahve tadı arayanlara özel, ristretto ve soğuk süt.",
+      "img": "images/ice-flat-white-1779718143683-square.jpg",
+      "imgWide": "images/ice-flat-white-1779718143683-wide.jpg",
       "tags": [
         "Sert",
         "Soğuk"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ice Americano",
