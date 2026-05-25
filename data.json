@@ -63,12 +63,14 @@
     {
       "name": "Cappuccino",
       "price": "140₺",
-      "img": "https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&q=80&w=800",
       "desc": "Eşit oranda espresso, sıcak süt ve yoğun süt köpüğü.",
+      "img": "images/cappuccino-1779717721121-square.jpg",
+      "imgWide": "images/cappuccino-1779717721121-wide.jpg",
       "tags": [
         "Klasik",
         "Köpüklü"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Cortado",
