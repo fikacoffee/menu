@@ -13,18 +13,6 @@
       "isActive": true
     },
     {
-      "name": "Latte",
-      "price": "120₺",
-      "desc": "Özenle çekilmiş taze espresso ve ipeksi sıcak süt köpüğünün yumuşak buluşması.",
-      "img": "images/latte-1779717018296-square.jpg",
-      "imgWide": "images/latte-1779717018296-wide.jpg",
-      "tags": [
-        "Sütlü",
-        "Yumuşak İçim"
-      ],
-      "isActive": true
-    },
-    {
       "name": "White Choc. Mocha",
       "price": "165₺",
       "desc": "Beyaz çikolata tutkunları için espresso ve sütün özel reçetesi.",
@@ -33,6 +21,18 @@
       "tags": [
         "Beyaz Çikolatalı",
         "Tatlı"
+      ],
+      "isActive": true
+    },
+    {
+      "name": "Latte",
+      "price": "120₺",
+      "desc": "Özenle çekilmiş taze espresso ve ipeksi sıcak süt köpüğünün yumuşak buluşması.",
+      "img": "images/latte-1779717018296-square.jpg",
+      "imgWide": "images/latte-1779717018296-wide.jpg",
+      "tags": [
+        "Sütlü",
+        "Yumuşak İçim"
       ],
       "isActive": true
     },
