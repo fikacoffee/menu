@@ -571,12 +571,14 @@
     {
       "name": "Ice Matcha Latte",
       "price": "185₺",
-      "img": "https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&q=80&w=800",
       "desc": "Buzlu süt ve premium Japon matcha çayının ferahlatıcı dengesi.",
+      "img": "images/ice-matcha-latte-1779722067704-square.jpg",
+      "imgWide": "images/ice-matcha-latte-1779722067704-wide.jpg",
       "tags": [
         "Sağlıklı",
         "Yeşil Çay"
-      ]
+      ],
+      "isActive": true
     }
   ],
   "Bitki Çayları": [
