@@ -721,12 +721,14 @@
     {
       "name": "Ada LOVE",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=800",
       "desc": "Fika'nın imza pastası, yoğun çikolata ve özel kremanın muazzam uyumu.",
+      "img": "images/ada-love-1779726425981-square.jpg",
+      "imgWide": "images/ada-love-1779726425981-wide.jpg",
       "tags": [
         "İmza",
         "Premium"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Pavlova",
