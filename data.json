@@ -633,12 +633,14 @@
     {
       "name": "Creamy Jasmine",
       "price": "135₺",
-      "img": "https://images.unsplash.com/photo-1576092768241-dec231879bfc?auto=format&fit=crop&q=80&w=800",
       "desc": "Yasemin çiçekleri, vanilya ve beyaz çayın kremamsı şıklığı.",
+      "img": "images/creamy-jasmine-1779722447880-square.jpg",
+      "imgWide": "images/creamy-jasmine-1779722447880-wide.jpg",
       "tags": [
         "Beyaz Çay",
         "Vanilyalı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Kış Çayı",
