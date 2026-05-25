@@ -104,6 +104,52 @@
                 .slice(0, 40) || 'urun';
         };
 
+        // Bir path images/ ile mi başlıyor? (yani repo'da bizim yüklediğimiz dosya mı)
+        const isManagedImagePath = (p) => typeof p === 'string' && p.startsWith('images/');
+
+        // Bu path başka bir üründe de kullanılıyor mu? (data güvenliği)
+        const isPathUsedElsewhere = (menuData, path, excludeCategory, excludeIndex) => {
+            if (!path) return false;
+            for (const cat of Object.keys(menuData)) {
+                if (cat === '_Config' || !Array.isArray(menuData[cat])) continue;
+                for (let i = 0; i < menuData[cat].length; i++) {
+                    if (cat === excludeCategory && i === excludeIndex) continue;
+                    const it = menuData[cat][i];
+                    if (it.img === path || it.imgWide === path) return true;
+                }
+            }
+            return false;
+        };
+
+        const deleteImageFromGithub = async (path) => {
+            const { username, repo, token } = getGithubCredentials();
+            if (!username || !repo || !token) return false;
+            if (!isManagedImagePath(path)) return false; // sadece images/ altındakileri sil
+
+            try {
+                // Önce dosyanın sha'sını al
+                const getRes = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${path}?t=${Date.now()}`, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                if (!getRes.ok) return false; // zaten yok veya erişilemez
+                const fileData = await getRes.json();
+                if (!fileData.sha) return false;
+
+                const delRes = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${path}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: `Admin: Görsel silindi (${path})`,
+                        sha: fileData.sha
+                    })
+                });
+                return delRes.ok;
+            } catch (e) {
+                console.warn('Görsel silinemedi:', path, e);
+                return false;
+            }
+        };
+
         const uploadImageToGithub = async (base64DataUrl, filename) => {
             const { username, repo, token } = getGithubCredentials();
             if (!username || !repo || !token) throw new Error('Github bilgileri eksik');
@@ -316,7 +362,7 @@
                         {activeView === 'products' && <ProductsView menuData={menuData} onSave={handleSaveData} />}
                         {activeView === 'daily' && <DailyView menuData={menuData} onSave={handleSaveData} />}
                         {activeView === 'slot' && <SlotView menuData={menuData} onSave={handleSaveData} />}
-                        {activeView === 'settings' && <SettingsView menuData={menuData} onSave={handleSaveData} />}
+                        {activeView === 'settings' && <SettingsView />}
                     </main>
                 </div>
             );
@@ -401,9 +447,16 @@
                     isActive: form.isActive.checked
                 };
 
+                // Eski item'ın foto path'lerini al — değişmişse silinecekler
+                const oldItem = (!isNew && isEditingItem.category && menuData[isEditingItem.category])
+                    ? menuData[isEditingItem.category][oldItemIndex]
+                    : null;
+                const oldImg = oldItem?.img;
+                const oldImgWide = oldItem?.imgWide;
+
                 const newData = { ...menuData };
                 const oldCat = isEditingItem.category;
-                
+
                 if (!isNew && oldCat !== targetCat) {
                     newData[oldCat].splice(oldItemIndex, 1);
                     newData[targetCat] = [newItem, ...(newData[targetCat] || [])];
@@ -414,6 +467,18 @@
                 }
 
                 if (await onSave(newData)) {
+                    // Foto değiştiyse eski dosyaları sil (başka yerde kullanılmıyorsa)
+                    if (oldImg && oldImg !== newItem.img && isManagedImagePath(oldImg)) {
+                        if (!isPathUsedElsewhere(newData, oldImg, null, null)) {
+                            deleteImageFromGithub(oldImg);
+                        }
+                    }
+                    if (oldImgWide && oldImgWide !== newItem.imgWide && isManagedImagePath(oldImgWide)) {
+                        if (!isPathUsedElsewhere(newData, oldImgWide, null, null)) {
+                            deleteImageFromGithub(oldImgWide);
+                        }
+                    }
+
                     setIsEditingItem(null);
                     if (activeCat !== targetCat) setActiveCat(targetCat);
                 }
@@ -421,8 +486,19 @@
 
             const handleDeleteItem = async (idx) => {
                 if(!confirm('Ürünü silmek istediğinize emin misiniz?')) return;
+                const deletedItem = menuData[activeCat][idx];
                 const newData = { ...menuData };
+                newData[activeCat] = [...newData[activeCat]];
                 newData[activeCat].splice(idx, 1);
+
+                // Ürünün fotoğraflarını images/ klasöründen sil (başka üründe kullanılmıyorsa)
+                const pathsToCheck = [deletedItem.img, deletedItem.imgWide].filter(isManagedImagePath);
+                for (const p of pathsToCheck) {
+                    if (!isPathUsedElsewhere(newData, p, null, null)) {
+                        await deleteImageFromGithub(p);
+                    }
+                }
+
                 onSave(newData);
             };
 
@@ -1121,95 +1197,11 @@
             );
         };
 
-        const SettingsView = ({ menuData, onSave }) => {
+        const SettingsView = () => {
             useEffect(() => { lucide.createIcons(); });
             const [newToken, setNewToken] = useState('');
             const [busy, setBusy] = useState(false);
             const [feedback, setFeedback] = useState(null); // {type: 'ok'|'err', msg}
-            const [migrating, setMigrating] = useState(false);
-            const [migrationStatus, setMigrationStatus] = useState(null); // {current, total, currentName}
-            const [migrationResult, setMigrationResult] = useState(null);
-
-            // Base64 olan görselleri say
-            const base64Count = useMemo(() => {
-                if (!menuData) return 0;
-                let count = 0;
-                Object.keys(menuData).forEach(cat => {
-                    if (cat === '_Config' || !Array.isArray(menuData[cat])) return;
-                    menuData[cat].forEach(item => {
-                        if (item.img?.startsWith('data:')) count++;
-                        if (item.imgWide?.startsWith('data:')) count++;
-                    });
-                });
-                return count;
-            }, [menuData]);
-
-            const handleMigrate = async () => {
-                if (!confirm(`${base64Count} adet eski görsel images/ klasörüne taşınacak. Bu işlem birkaç dakika sürebilir. Devam edilsin mi?`)) return;
-
-                setMigrating(true);
-                setMigrationResult(null);
-                const newData = JSON.parse(JSON.stringify(menuData));
-                let processed = 0;
-                let failed = 0;
-                const failedItems = [];
-
-                for (const cat of Object.keys(newData)) {
-                    if (cat === '_Config' || !Array.isArray(newData[cat])) continue;
-                    for (let i = 0; i < newData[cat].length; i++) {
-                        const item = newData[cat][i];
-                        const slug = slugify(item.name);
-
-                        if (item.img?.startsWith('data:')) {
-                            setMigrationStatus({ current: processed + 1, total: base64Count, currentName: `${item.name} (kare)` });
-                            try {
-                                const ts = Date.now();
-                                const path = await uploadImageToGithub(item.img, `${slug}-${ts}-square.jpg`);
-                                newData[cat][i].img = path;
-                                processed++;
-                            } catch (e) {
-                                failed++;
-                                failedItems.push(`${item.name} (kare): ${e.message}`);
-                            }
-                            // küçük bir delay GitHub API'sini rahatlatır
-                            await new Promise(r => setTimeout(r, 300));
-                        }
-
-                        if (item.imgWide?.startsWith('data:')) {
-                            setMigrationStatus({ current: processed + 1, total: base64Count, currentName: `${item.name} (geniş)` });
-                            try {
-                                const ts = Date.now();
-                                const path = await uploadImageToGithub(item.imgWide, `${slug}-${ts}-wide.jpg`);
-                                newData[cat][i].imgWide = path;
-                                processed++;
-                            } catch (e) {
-                                failed++;
-                                failedItems.push(`${item.name} (geniş): ${e.message}`);
-                            }
-                            await new Promise(r => setTimeout(r, 300));
-                        }
-                    }
-                }
-
-                setMigrationStatus(null);
-                // Sonuçları data.json'a kaydet
-                const saved = await onSave(newData);
-                setMigrating(false);
-
-                if (saved) {
-                    setMigrationResult({
-                        ok: true,
-                        msg: `✓ ${processed} görsel taşındı. ${failed > 0 ? failed + ' tanesi başarısız oldu.' : ''}`,
-                        details: failedItems
-                    });
-                } else {
-                    setMigrationResult({
-                        ok: false,
-                        msg: 'Görseller yüklendi ama data.json kaydı başarısız oldu. Sayfayı yenileyin.',
-                        details: failedItems
-                    });
-                }
-            };
 
             const handleLogout = () => {
                 localStorage.clear();
@@ -1328,62 +1320,6 @@
                             <span>{feedback.msg}</span>
                         </div>
                     )}
-
-                    {/* MIGRATION: Eski base64 görselleri images/ klasörüne taşı */}
-                    <div className="border-t border-gray-100 pt-6 mb-6">
-                        <h3 className="font-bold text-gray-800 mb-1 flex items-center gap-2">
-                            <i data-lucide="hard-drive-upload" className="w-4 h-4"></i>
-                            Görselleri Optimize Et
-                        </h3>
-                        <p className="text-xs text-gray-500 mb-3">
-                            Eski sistemde fotoğraflar data.json içine gömülüyordu. Bu, dosyayı şişirir ve müşteri mobil verisini tüketir.
-                            Bu buton fotoğrafları <code className="bg-gray-100 px-1 rounded">images/</code> klasörüne taşır.
-                        </p>
-
-                        {base64Count > 0 ? (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-3">
-                                <div className="text-sm text-yellow-800 font-semibold mb-2">
-                                    {base64Count} adet görsel hâlâ data.json içinde gömülü.
-                                </div>
-                                <button
-                                    onClick={handleMigrate}
-                                    disabled={migrating}
-                                    className="w-full py-3 rounded-xl bg-yellow-600 text-white font-bold hover:bg-yellow-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                                >
-                                    {migrating ? (
-                                        <>
-                                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                                            {migrationStatus ? `${migrationStatus.current}/${migrationStatus.total}: ${migrationStatus.currentName}` : 'Hazırlanıyor...'}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i data-lucide="arrow-up-from-line" className="w-4 h-4"></i>
-                                            {base64Count} Görseli Taşı
-                                        </>
-                                    )}
-                                </button>
-                                <p className="text-[11px] text-yellow-700 mt-2">
-                                    Süre: ~{Math.ceil(base64Count * 1.5)} saniye (her görsel için ~1-2 sn).
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700 mb-3 flex items-center gap-2">
-                                <i data-lucide="check-circle" className="w-4 h-4"></i>
-                                Tüm görseller optimize edilmiş durumda.
-                            </div>
-                        )}
-
-                        {migrationResult && (
-                            <div className={`p-3 rounded-xl text-sm ${migrationResult.ok ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
-                                <div className="font-semibold">{migrationResult.msg}</div>
-                                {migrationResult.details?.length > 0 && (
-                                    <ul className="mt-2 text-xs space-y-1 list-disc list-inside">
-                                        {migrationResult.details.map((d, i) => <li key={i}>{d}</li>)}
-                                    </ul>
-                                )}
-                            </div>
-                        )}
-                    </div>
 
                     <button onClick={handleLogout} className="w-full py-4 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
                         <i data-lucide="log-out" className="w-5 h-5"></i>
