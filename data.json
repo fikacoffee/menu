@@ -441,12 +441,14 @@
     {
       "name": "Ice FikaMint",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1513618827672-0d7c5ad591b1?auto=format&fit=crop&q=80&w=800",
       "desc": "Fika'ya özel taze nane ve espressonun buzlu ferahlığı.",
+      "img": "images/ice-fikamint-1779726394645-square.jpg",
+      "imgWide": "images/ice-fikamint-1779726394645-wide.jpg",
       "tags": [
         "Ferahlatıcı",
         "İmza"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ice Fındık Çiko.",
