@@ -499,12 +499,14 @@
     {
       "name": "Berryz",
       "price": "175₺",
-      "img": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=800",
       "desc": "Orman meyveleri özleriyle hazırlanan serinletici alkolsüz kokteyl.",
+      "img": "images/berryz-1779721917178-square.jpg",
+      "imgWide": "images/berryz-1779721917178-wide.jpg",
       "tags": [
         "Kahvesiz",
         "Meyveli"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Orange Mango",
