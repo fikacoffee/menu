@@ -123,12 +123,14 @@
     {
       "name": "Espresso",
       "price": "110₺",
-      "img": "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&q=80&w=800",
       "desc": "Tek shot, yoğun gövdeli ve zengin kremalı espresso.",
+      "img": "images/espresso-1779717820305-square.jpg",
+      "imgWide": "images/espresso-1779717820305-wide.jpg",
       "tags": [
         "Çok Sert",
         "Sütsüz"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Double Espresso",
