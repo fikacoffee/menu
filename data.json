@@ -1,18 +1,6 @@
 {
   "Sıcak Kahveler": [
     {
-      "name": "Latte",
-      "price": "120₺",
-      "desc": "Özenle çekilmiş taze espresso ve ipeksi sıcak süt köpüğünün yumuşak buluşması.",
-      "img": "images/latte-1779717018296-square.jpg",
-      "imgWide": "images/latte-1779717018296-wide.jpg",
-      "tags": [
-        "Sütlü",
-        "Yumuşak İçim"
-      ],
-      "isActive": true
-    },
-    {
       "name": "Mocha",
       "price": "165₺",
       "desc": "Espresso, sıcak süt ve premium çikolatanın tatlı uyumu.",
@@ -21,6 +9,18 @@
       "tags": [
         "Çikolatalı",
         "Tatlı"
+      ],
+      "isActive": true
+    },
+    {
+      "name": "Latte",
+      "price": "120₺",
+      "desc": "Özenle çekilmiş taze espresso ve ipeksi sıcak süt köpüğünün yumuşak buluşması.",
+      "img": "images/latte-1779717018296-square.jpg",
+      "imgWide": "images/latte-1779717018296-wide.jpg",
+      "tags": [
+        "Sütlü",
+        "Yumuşak İçim"
       ],
       "isActive": true
     },
