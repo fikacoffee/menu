@@ -52,36 +52,26 @@
 
         const fetchMenuFromGithub = async () => {
             const { username, repo, token } = getGithubCredentials();
-            if (!username || !repo) return { error: 'Github bilgileri eksik. Ayarları kontrol edin.' };
+            if (!username || !repo || !token) return { authError: true, error: 'Github bilgileri eksik.' };
 
-            let apiErrorMsg = '';
             try {
                 const url = `https://api.github.com/repos/${username}/${repo}/contents/data.json`;
-                const headers = token ? { 'Authorization': `token ${token}` } : {};
-                const res = await fetch(url + '?t=' + new Date().getTime(), { headers });
+                const res = await fetch(url + '?t=' + new Date().getTime(), {
+                    headers: { 'Authorization': `token ${token}` }
+                });
 
-                if (!res.ok) {
-                    if (res.status === 401) apiErrorMsg = 'Github Token geçersiz veya süresi dolmuş (401). Yeni bir token oluşturup Ayarlar > Bağlantı kısmından güncelleyin.';
-                    else if (res.status === 404) apiErrorMsg = `Repo veya dosya bulunamadı (404). "${username}/${repo}" doğru mu, data.json mevcut mu?`;
-                    else if (res.status === 403) apiErrorMsg = 'Erişim reddedildi (403). Token yetkisi yetersiz olabilir.';
-                    else apiErrorMsg = `Github API hatası: ${res.status}`;
-                    throw new Error(apiErrorMsg);
-                }
+                if (res.status === 401) return { authError: true, error: 'Token geçersiz veya süresi dolmuş.' };
+                if (res.status === 403) return { authError: true, error: 'Erişim reddedildi. Token "repo" yetkisine sahip olmalı.' };
+                if (res.status === 404) return { authError: true, error: `Repo veya data.json bulunamadı: ${username}/${repo}` };
+                if (!res.ok) return { error: `Github API hatası: ${res.status}` };
 
                 const data = await res.json();
-                if (!data.content) throw new Error('data.json içeriği boş döndü.');
+                if (!data.content) return { error: 'data.json içeriği boş döndü.' };
                 const content = decodeURIComponent(escape(atob(data.content)));
                 return { menuData: JSON.parse(content), sha: data.sha };
             } catch (err) {
                 console.error('GitHub API fetch failed:', err);
-                try {
-                    const fallbackRes = await fetch('data.json?t=' + new Date().getTime(), { cache: 'no-store' });
-                    if (!fallbackRes.ok) throw new Error('Yerel data.json bulunamadı');
-                    const fallbackData = await fallbackRes.json();
-                    return { menuData: fallbackData, sha: null, warning: apiErrorMsg || err.message };
-                } catch (fallbackErr) {
-                    return { error: apiErrorMsg || err.message || 'Veri yüklenemedi.' };
-                }
+                return { error: 'Bağlantı hatası: ' + err.message };
             }
         };
 
@@ -164,13 +154,19 @@
                 setIsLoading(true);
                 setLoadError(null);
                 const result = await fetchMenuFromGithub();
+
+                // Token/yetki sorunu varsa kullanıcıyı doğrudan login'e at
+                if (result && result.authError) {
+                    localStorage.removeItem('github_token');
+                    alert('Bağlantı kuruldu ama yetki sorunu var:\n\n' + result.error + '\n\nLütfen tekrar giriş yapın (yeni token ile).');
+                    setIsLoading(false);
+                    setIsLoggedIn(false);
+                    return;
+                }
                 if (result && result.error) {
                     setLoadError(result.error);
                     setIsLoading(false);
                     return;
-                }
-                if (result && result.warning) {
-                    setLoadError('Uyarı (salt-okunur mod): ' + result.warning);
                 }
                 if (result && result.menuData) {
                     if (!result.menuData._Config) {
@@ -1048,9 +1044,69 @@
         };
 
         const SettingsView = () => {
+            useEffect(() => { lucide.createIcons(); });
+            const [newToken, setNewToken] = useState('');
+            const [busy, setBusy] = useState(false);
+            const [feedback, setFeedback] = useState(null); // {type: 'ok'|'err', msg}
+
             const handleLogout = () => {
                 localStorage.clear();
                 window.location.reload();
+            };
+
+            const testConnection = async () => {
+                setBusy(true);
+                setFeedback(null);
+                const { username, repo, token } = getGithubCredentials();
+                try {
+                    const res = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/data.json`, {
+                        headers: { 'Authorization': `token ${token}` }
+                    });
+                    if (res.ok) setFeedback({ type: 'ok', msg: '✓ Bağlantı başarılı. Her şey çalışıyor.' });
+                    else if (res.status === 401) setFeedback({ type: 'err', msg: 'Token geçersiz veya süresi dolmuş (401).' });
+                    else if (res.status === 404) setFeedback({ type: 'err', msg: `Repo bulunamadı (404): ${username}/${repo}` });
+                    else if (res.status === 403) setFeedback({ type: 'err', msg: 'Erişim reddedildi (403). Token "repo" yetkisine sahip olmalı.' });
+                    else setFeedback({ type: 'err', msg: `HTTP ${res.status}` });
+                } catch (e) {
+                    setFeedback({ type: 'err', msg: 'Bağlantı hatası: ' + e.message });
+                }
+                setBusy(false);
+            };
+
+            const updateToken = async () => {
+                const t = newToken.trim();
+                if (!t) { setFeedback({ type: 'err', msg: 'Önce yeni token\'ı yapıştır.' }); return; }
+                setBusy(true);
+                setFeedback(null);
+                const { username, repo } = getGithubCredentials();
+                try {
+                    // Önce token geçerli mi?
+                    const userRes = await fetch('https://api.github.com/user', {
+                        headers: { 'Authorization': `token ${t}` }
+                    });
+                    if (!userRes.ok) {
+                        setFeedback({ type: 'err', msg: userRes.status === 401 ? 'Bu token geçersiz veya süresi dolmuş.' : `Token kontrolü başarısız: HTTP ${userRes.status}` });
+                        setBusy(false);
+                        return;
+                    }
+                    // Repo erişimi var mı?
+                    const repoRes = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/data.json`, {
+                        headers: { 'Authorization': `token ${t}` }
+                    });
+                    if (!repoRes.ok) {
+                        setFeedback({ type: 'err', msg: `Token geçerli ama repoya erişemiyor (HTTP ${repoRes.status}). Token'da "repo" yetkisi var mı?` });
+                        setBusy(false);
+                        return;
+                    }
+                    // Geçti — kaydet
+                    localStorage.setItem('github_token', t);
+                    setNewToken('');
+                    setFeedback({ type: 'ok', msg: '✓ Token güncellendi ve doğrulandı. Sayfa yenileniyor...' });
+                    setTimeout(() => window.location.reload(), 1200);
+                } catch (e) {
+                    setFeedback({ type: 'err', msg: 'Bağlantı hatası: ' + e.message });
+                    setBusy(false);
+                }
             };
 
             return (
@@ -1064,8 +1120,8 @@
                             <p className="text-sm text-gray-500">Github bağlantı bilgileri.</p>
                         </div>
                     </div>
-                    
-                    <div className="space-y-4 mb-8">
+
+                    <div className="space-y-4 mb-6">
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Github Kullanıcı Adı</label>
                             <div className="font-semibold">{localStorage.getItem('github_username')}</div>
@@ -1074,7 +1130,42 @@
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Depo Adı</label>
                             <div className="font-semibold">{localStorage.getItem('github_repo')}</div>
                         </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Mevcut Token</label>
+                            <div className="font-mono text-sm text-gray-600">{(localStorage.getItem('github_token') || '').slice(0, 10)}••••••••</div>
+                        </div>
                     </div>
+
+                    <button onClick={testConnection} disabled={busy} className="w-full mb-6 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-60">
+                        <i data-lucide="plug" className="w-4 h-4"></i>
+                        Bağlantıyı Test Et
+                    </button>
+
+                    <div className="border-t border-gray-100 pt-6 mb-6">
+                        <h3 className="font-bold text-gray-800 mb-1">Token'ı Güncelle</h3>
+                        <p className="text-xs text-gray-500 mb-3">Yeni Personal Access Token'ı yapıştır. Otomatik doğrulanıp kaydedilir.</p>
+                        <div className="flex gap-2">
+                            <input
+                                type="password"
+                                value={newToken}
+                                onChange={(e) => setNewToken(e.target.value)}
+                                placeholder="ghp_..."
+                                disabled={busy}
+                                className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none disabled:opacity-50"
+                            />
+                            <button onClick={updateToken} disabled={busy} className="px-5 py-3 rounded-xl bg-primary text-white font-bold hover:bg-orange-600 transition-colors disabled:opacity-60 flex items-center gap-2">
+                                {busy ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : <i data-lucide="check" className="w-4 h-4"></i>}
+                                Güncelle
+                            </button>
+                        </div>
+                    </div>
+
+                    {feedback && (
+                        <div className={`mb-6 p-3 rounded-xl text-sm flex items-start gap-2 ${feedback.type === 'ok' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                            <i data-lucide={feedback.type === 'ok' ? 'check-circle' : 'alert-circle'} className="w-4 h-4 mt-0.5 shrink-0"></i>
+                            <span>{feedback.msg}</span>
+                        </div>
+                    )}
 
                     <button onClick={handleLogout} className="w-full py-4 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
                         <i data-lucide="log-out" className="w-5 h-5"></i>
