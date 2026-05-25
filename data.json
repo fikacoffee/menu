@@ -847,12 +847,14 @@
     {
       "name": "Cocostar",
       "price": "285₺",
-      "img": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800",
       "desc": "Yoğun Hindistan cevizi dolgusu ve sütlü çikolata kaplaması.",
+      "img": "images/cocostar-1779723245703-square.jpg",
+      "imgWide": "images/cocostar-1779723245703-wide.jpg",
       "tags": [
         "Hindistan Cevizi",
         "Tatlı"
-      ]
+      ],
+      "isActive": true
     }
   ],
   "Extralar": [
