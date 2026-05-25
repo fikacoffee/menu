@@ -159,12 +159,14 @@
     {
       "name": "Sıcak Çikolata",
       "price": "140₺",
-      "img": "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?auto=format&fit=crop&q=80&w=800",
       "desc": "Yoğun çikolata kıvamı ve buharla ısıtılmış sıcak süt.",
+      "img": "images/sicak-cikolata-1779717883722-square.jpg",
+      "imgWide": "images/sicak-cikolata-1779717883722-wide.jpg",
       "tags": [
         "Kahvesiz",
         "Tatlı"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Belgian Chocolate",
