@@ -621,12 +621,14 @@
     {
       "name": "Lady Tea",
       "price": "135₺",
-      "img": "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?auto=format&fit=crop&q=80&w=800",
       "desc": "Çilek ve ananasın zarif uyumu, hafif ve aromatik bir deneyim.",
+      "img": "images/lady-tea-1779722423201-square.jpg",
+      "imgWide": "images/lady-tea-1779722423201-wide.jpg",
       "tags": [
         "Zarif",
         "Meyveli"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Creamy Jasmine",
