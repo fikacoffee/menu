@@ -645,12 +645,14 @@
     {
       "name": "Kış Çayı",
       "price": "120₺",
-      "img": "https://images.unsplash.com/photo-1512568400610-62da28bc8a13?auto=format&fit=crop&q=80&w=800",
       "desc": "Soğuk günlerin vazgeçilmezi bağışıklık dostu baharatlı harman.",
+      "img": "images/kis-cayi-1779722470039-square.jpg",
+      "imgWide": "images/kis-cayi-1779722470039-wide.jpg",
       "tags": [
         "Baharatlı",
         "Sıcak"
-      ]
+      ],
+      "isActive": true
     },
     {
       "name": "Ada Çayı",
