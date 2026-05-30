@@ -827,18 +827,6 @@
       "isActive": true
     },
     {
-      "name": "Küp Kruvasan",
-      "price": "290₺",
-      "desc": "Bol tereyağlı, kat kat hamuruyla içi özel krema dolgulu küp kruvasan.",
-      "img": "images/kup-kruvasan-1779723200226-square.jpg",
-      "imgWide": "images/kup-kruvasan-1779723200226-wide.jpg",
-      "tags": [
-        "Çıtır",
-        "Kremalı"
-      ],
-      "isActive": true
-    },
-    {
       "name": "Roll Kruvasan",
       "price": "290₺",
       "desc": "New York trendi, yuvarlak formlu ve bol çikolata dolgulu kruvasan.",
@@ -847,6 +835,18 @@
       "tags": [
         "Trend",
         "Çıtır"
+      ],
+      "isActive": true
+    },
+    {
+      "name": "Küp Kruvasan",
+      "price": "290₺",
+      "desc": "Bol tereyağlı, kat kat hamuruyla içi özel krema dolgulu küp kruvasan.",
+      "img": "images/kup-kruvasan-1779723200226-square.jpg",
+      "imgWide": "images/kup-kruvasan-1779723200226-wide.jpg",
+      "tags": [
+        "Çıtır",
+        "Kremalı"
       ],
       "isActive": true
     },
