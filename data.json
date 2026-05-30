@@ -883,6 +883,15 @@
   ],
   "Extralar": [
     {
+      "name": "Uludağ Soda",
+      "price": "65₺",
+      "desc": "",
+      "img": "images/uludag-soda-1780152246140-square.jpg",
+      "imgWide": "images/uludag-soda-1780152246140-wide.jpg",
+      "tags": [],
+      "isActive": true
+    },
+    {
       "name": "Şurup",
       "price": "35₺",
       "desc": "İçeceğinize ekstra lezzet katacak vanilya, karamel veya fındık şurubu.",
