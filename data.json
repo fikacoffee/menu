@@ -803,18 +803,6 @@
       "isActive": true
     },
     {
-      "name": "BlueBerry Cake",
-      "price": "285₺",
-      "desc": "Taze yaban mersini parçacıkları içeren yumuşacık kek.",
-      "img": "images/blueberry-cake-1779723152352-square.jpg",
-      "imgWide": "images/blueberry-cake-1779723152352-wide.jpg",
-      "tags": [
-        "Meyveli",
-        "Yumuşak"
-      ],
-      "isActive": true
-    },
-    {
       "name": "Tiramisu",
       "price": "285₺",
       "desc": "Espresso ile ıslatılmış kedi dili ve orijinal mascarpone kreması.",
@@ -823,6 +811,18 @@
       "tags": [
         "Kahveli",
         "İtalyan"
+      ],
+      "isActive": true
+    },
+    {
+      "name": "BlueBerry Cake",
+      "price": "285₺",
+      "desc": "Taze yaban mersini parçacıkları içeren yumuşacık kek.",
+      "img": "images/blueberry-cake-1779723152352-square.jpg",
+      "imgWide": "images/blueberry-cake-1779723152352-wide.jpg",
+      "tags": [
+        "Meyveli",
+        "Yumuşak"
       ],
       "isActive": true
     },
