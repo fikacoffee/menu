@@ -953,7 +953,7 @@
       "drinkName": "Mocha",
       "foodName": "Fıstık Rüyası",
       "discountAmount": 0,
-      "isActive": true
+      "isActive": false
     },
     "slotConfig": [
       {
