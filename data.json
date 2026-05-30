@@ -719,6 +719,15 @@
   ],
   "Pastalar": [
     {
+      "name": "Cream Puff",
+      "price": "285₺",
+      "desc": "Dışı çıtır choux hamuru, içinde çikolata ve pastacı kremasıyla kahvenizin lezzetli eşlikçisi",
+      "img": "images/cream-puff-1780151182456-square.jpg",
+      "imgWide": "images/cream-puff-1780151182456-wide.jpg",
+      "tags": [],
+      "isActive": true
+    },
+    {
       "name": "Ada LOVE",
       "price": "285₺",
       "desc": "Fika'nın imza pastası, yoğun çikolata ve özel kremanın muazzam uyumu.",
